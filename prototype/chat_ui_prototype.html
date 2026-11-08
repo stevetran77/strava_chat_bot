@@ -1,0 +1,172 @@
+<!doctype html>
+<!--
+PROTOTYPE - throwaway. Question: what should the chat UI and chart display look like?
+Three structurally different variants on one page, switch with ?variant=a|b|c or the bottom bar / arrow keys.
+All data below is FAKE. No backend, no persistence. Delete me after the ticket is decided.
+-->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE - chat UI</title>
+<style>
+  :root { --bg:#f6f7f9; --panel:#fff; --ink:#1b1f24; --mute:#6b7380; --line:#e2e5ea; --accent:#2b6cdf; --accent2:#e0793b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171b; --panel:#1d2127; --ink:#e8ebef; --mute:#98a1ae; --line:#2c323a; --accent:#6aa0ff; --accent2:#f0a070; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, sans-serif; padding-bottom:70px; }
+  .banner { background:#b00020; color:#fff; font-size:12px; text-align:center; padding:4px; }
+  details summary { cursor:pointer; color:var(--mute); font-size:13px; }
+  pre { background:var(--bg); border:1px solid var(--line); padding:8px; border-radius:6px; font-size:12px; overflow:auto; margin:6px 0 0; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th, td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); }
+  input[type=text] { flex:1; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font:inherit; }
+  button { font:inherit; cursor:pointer; }
+  .chip { border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:999px; padding:4px 12px; font-size:13px; }
+  .send { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 16px; }
+  form { display:flex; gap:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .switcher { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:#111; color:#fff; border-radius:999px; padding:6px 10px; display:flex; gap:12px; align-items:center; box-shadow:0 4px 18px rgba(0,0,0,.4); z-index:9; }
+  .switcher button { background:#333; color:#fff; border:0; border-radius:999px; width:30px; height:30px; }
+  svg text { fill:var(--mute); font-size:10px; }
+
+  /* Variant A: classic single column bubbles */
+  .a-wrap { max-width:720px; margin:0 auto; padding:16px; }
+  .a-msg { margin:14px 0; display:flex; }
+  .a-msg.user { justify-content:flex-end; }
+  .a-bubble { max-width:88%; padding:10px 14px; border-radius:14px; background:var(--panel); border:1px solid var(--line); }
+  .a-msg.user .a-bubble { background:var(--accent); color:#fff; border:0; }
+
+  /* Variant B: split view, conversation left, workspace right */
+  .b-wrap { display:grid; grid-template-columns:minmax(300px,1fr) minmax(320px,1.2fr); height:calc(100vh - 28px - 70px); }
+  .b-left { border-right:1px solid var(--line); display:flex; flex-direction:column; padding:12px; overflow:auto; }
+  .b-right { padding:16px; overflow:auto; background:var(--panel); }
+  .b-q { margin:10px 0 2px; font-weight:600; }
+  .b-a { color:var(--ink); margin:0 0 6px; padding-left:10px; border-left:3px solid var(--accent); cursor:pointer; }
+  .b-a.sel { background:color-mix(in srgb, var(--accent) 12%, transparent); }
+  @media (max-width:760px) { .b-wrap { grid-template-columns:1fr; height:auto; } .b-left { border-right:0; } }
+
+  /* Variant C: dashboard header + answer feed cards, one command bar */
+  .c-wrap { max-width:960px; margin:0 auto; padding:16px; }
+  .c-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+  .c-stat { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  .c-stat b { display:block; font-size:22px; }
+  .c-card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; margin:12px 0; }
+  .c-card h3 { margin:0 0 6px; font-size:15px; color:var(--mute); font-weight:500; }
+  .c-card p { margin:4px 0 10px; font-size:17px; }
+  .c-cmd { position:sticky; top:0; background:var(--bg); padding:8px 0; z-index:2; }
+</style>
+</head>
+<body>
+<div class="banner">PROTOTYPE - fake data, nothing is connected</div>
+<div id="app"></div>
+<div class="switcher"><button id="prev" aria-label="previous variant">&larr;</button><span id="label"></span><button id="next" aria-label="next variant">&rarr;</button></div>
+
+<script>
+/* ---------- fake data ---------- */
+const exchanges = [
+  { q: "Tuần này tôi chạy bao nhiêu km?",
+    a: "Tuần này (3-9/11) bạn chạy 18,4 km qua 3 buổi, pace trung bình 8:09 /km.",
+    tool: "get_weekly_totals(week='2026-W45', sport='run')",
+    chart: { type: "bar", title: "Km theo ngày", labels: ["T2","T3","T4","T5","T6","T7","CN"], values: [0, 5.4, 0, 7.0, 0, 6.0, 0] } },
+  { q: "Tải tập luyện 4 tuần qua thế nào?",
+    a: "Tải ngắn hạn 32, dài hạn 39, tỉ lệ 0,82: bạn đang ở mức duy trì, chưa có dấu hiệu quá tải.",
+    tool: "SELECT date, short_term_load, long_term_load\nFROM daily_metrics\nWHERE date >= current_date - 28\nORDER BY date;",
+    chart: { type: "line", title: "Tải ngắn hạn và dài hạn", labels: ["W42","W43","W44","W45"], series: [{ n: "ngắn hạn", v: [28, 41, 37, 32] }, { n: "dài hạn", v: [36, 38, 40, 39] }] } },
+  { q: "Tìm buổi chạy giống buổi hôm qua",
+    a: "Tìm thấy 3 buổi tương tự (cùng cự ly, pace và nhịp tim).",
+    tool: "find_similar_activities(activity_id=..., limit=3)  -- vector search, bge-m3",
+    table: { head: ["Ngày","Km","Pace","HR","Giống"], rows: [["06/11","7,0","8:01","138","0,91"],["19/10","6,8","8:10","136","0,88"],["02/10","7,3","8:22","141","0,84"]] } }
+];
+const sidebar_stats = [["Tuần này","18,4 km"],["Tải dài hạn","39"],["Tỉ lệ tải","0,82"],["HR nghỉ","52 bpm"]];
+
+/* ---------- shared chart builders (inline svg) ---------- */
+function bar_svg(c, w = 420, h = 150) {
+  const max = Math.max(...c.values, 1), bw = w / c.values.length;
+  const bars = c.values.map((v, i) => {
+    const bh = (v / max) * (h - 30);
+    return `<rect x="${i*bw+6}" y="${h-20-bh}" width="${bw-12}" height="${bh}" fill="var(--accent)" rx="3"/>` +
+           `<text x="${i*bw+bw/2}" y="${h-6}" text-anchor="middle">${c.labels[i]}</text>` +
+           (v ? `<text x="${i*bw+bw/2}" y="${h-24-bh}" text-anchor="middle">${v}</text>` : "");
+  }).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="${c.title}">${bars}</svg>`;
+}
+function line_svg(c, w = 420, h = 150) {
+  const all = c.series.flatMap(s => s.v), max = Math.max(...all), min = Math.min(...all) - 5;
+  const x = i => 20 + i * ((w - 40) / (c.labels.length - 1));
+  const y = v => 10 + (1 - (v - min) / (max - min)) * (h - 40);
+  const colors = ["var(--accent)", "var(--accent2)"];
+  const lines = c.series.map((s, k) => `<polyline fill="none" stroke="${colors[k]}" stroke-width="2.5" points="${s.v.map((v,i)=>x(i)+","+y(v)).join(" ")}"/>`).join("");
+  const labels = c.labels.map((l, i) => `<text x="${x(i)}" y="${h-6}" text-anchor="middle">${l}</text>`).join("");
+  const legend = c.series.map((s, k) => `<text x="${20+k*90}" y="10" style="fill:${colors[k]}">${s.n}</text>`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="${c.title}">${lines}${labels}${legend}</svg>`;
+}
+const chart_svg = c => c.type === "bar" ? bar_svg(c) : line_svg(c);
+const table_html = t => `<table><tr>${t.head.map(h=>`<th>${h}</th>`).join("")}</tr>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
+const tool_html = e => `<details><summary>Truy vấn đã dùng</summary><pre>${e.tool}</pre></details>`;
+const visual_html = e => e.chart ? chart_svg(e.chart) : table_html(e.table);
+
+/* ---------- state ---------- */
+const state = { shown: 1, selected: 0 };
+const variants = { a: "Chat cổ điển", b: "Chia đôi: chat + workspace", c: "Dashboard + feed" };
+const keys = Object.keys(variants);
+const current_variant = () => { const v = new URLSearchParams(location.search).get("variant"); return keys.includes(v) ? v : "a"; };
+
+function composer() {
+  const next = exchanges[state.shown];
+  return `<form id="composer"><input type="text" id="msg" placeholder="Hỏi về dữ liệu tập luyện (tiếng Việt hoặc English)" autocomplete="off"><button class="send">Gửi</button></form>` +
+    (next ? `<div class="chips"><button class="chip" data-next>Thử: ${next.q}</button></div>` : `<div class="chips"><span style="color:var(--mute);font-size:13px">Hết câu hỏi mẫu</span></div>`);
+}
+
+/* ---------- variants ---------- */
+function variant_a() {
+  const msgs = exchanges.slice(0, state.shown).map(e =>
+    `<div class="a-msg user"><div class="a-bubble">${e.q}</div></div>` +
+    `<div class="a-msg"><div class="a-bubble"><div>${e.a}</div>${visual_html(e)}${tool_html(e)}</div></div>`).join("");
+  return `<div class="a-wrap">${msgs}${composer()}</div>`;
+}
+function variant_b() {
+  const list = exchanges.slice(0, state.shown).map((e, i) =>
+    `<div class="b-q">${e.q}</div><div class="b-a ${i===state.selected?"sel":""}" data-pick="${i}">${e.a}</div>`).join("");
+  const e = exchanges[state.selected];
+  return `<div class="b-wrap"><div class="b-left"><div style="flex:1">${list}</div>${composer()}</div>` +
+         `<div class="b-right"><h3 style="margin-top:0">${e.chart ? e.chart.title : "Kết quả"}</h3>${visual_html(e)}<h4>Truy vấn</h4><pre>${e.tool}</pre></div></div>`;
+}
+function variant_c() {
+  const stats = sidebar_stats.map(([k, v]) => `<div class="c-stat">${k}<b>${v}</b></div>`).join("");
+  const cards = exchanges.slice(0, state.shown).map(e =>
+    `<div class="c-card"><h3>${e.q}</h3><p>${e.a}</p>${visual_html(e)}${tool_html(e)}</div>`).reverse().join("");
+  return `<div class="c-wrap"><div class="c-stats">${stats}</div><div class="c-cmd">${composer()}</div>${cards}</div>`;
+}
+const renderers = { a: variant_a, b: variant_b, c: variant_c };
+
+/* ---------- wiring ---------- */
+function render() {
+  const v = current_variant();
+  document.getElementById("app").innerHTML = renderers[v]();
+  document.getElementById("label").textContent = `${v.toUpperCase()} (${variants[v]})`;
+  const next_chip = document.querySelector("[data-next]");
+  if (next_chip) next_chip.onclick = reveal_next;
+  const form = document.getElementById("composer");
+  if (form) form.onsubmit = ev => { ev.preventDefault(); reveal_next(); };
+  document.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => { state.selected = +el.dataset.pick; render(); });
+  console.log("state", JSON.stringify(state), "variant", v);
+}
+function reveal_next() {
+  if (state.shown < exchanges.length) { state.selected = state.shown; state.shown += 1; render(); }
+}
+function go(delta) {
+  const i = (keys.indexOf(current_variant()) + delta + keys.length) % keys.length;
+  const url = new URL(location.href); url.searchParams.set("variant", keys[i]);
+  history.replaceState(null, "", url); render();
+}
+document.getElementById("prev").onclick = () => go(-1);
+document.getElementById("next").onclick = () => go(1);
+document.addEventListener("keydown", ev => {
+  if (/INPUT|TEXTAREA/.test(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+  if (ev.key === "ArrowLeft") go(-1);
+  if (ev.key === "ArrowRight") go(1);
+});
+render();
+</script>
+</body>
+</html>
