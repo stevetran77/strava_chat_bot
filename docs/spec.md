@@ -87,7 +87,7 @@ Status: planning output of the wayfinder map (`docs/wayfinder/map.md`). Details 
 
 ## Proposed build order (not yet agreed)
 
-1. Environment: Python (Homebrew 3.14 is installed; library compatibility **[UNVERIFIED]**), Ollama, Docker Desktop, Postgres + pgvector container.
+1. Environment: Python (venv on 3.15.2 via `uv`; psycopg 3.3.8 works), Ollama, Docker Desktop, Postgres + pgvector container.
 2. Raw pull from the connector (12 months) and the parser into `activities`, `laps`, `daily_metrics`.
 3. Summaries, embeddings, vector search; index experiments.
 4. Backend with tools and the read-only role; LLM bake-off.

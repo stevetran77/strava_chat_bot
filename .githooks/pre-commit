@@ -1,0 +1,16 @@
+#!/bin/sh
+# Blocks commits that would expose secrets or personal data, and runs the parser tests.
+# Enabled with: git config core.hooksPath .githooks
+cd "$(git rev-parse --show-toplevel)" || exit 1
+fail() { echo "[FAIL] pre-commit: $1" >&2; exit 1; }
+
+tracked=$(git ls-files --cached | grep -E '(^|/)\.env$|^data/|^\.venv/')
+[ -z "$tracked" ] || fail "private files are staged or tracked (.env, data/, .venv/): $tracked"
+
+for path in .env data/raw .venv; do
+    git check-ignore -q "$path" || fail "$path is not ignored by .gitignore"
+done
+
+[ -x .venv/bin/python ] || fail ".venv missing, cannot run tests"
+.venv/bin/python -m unittest discover -s tests -q || fail "parser tests failed"
+echo "[OK] pre-commit checks passed"
