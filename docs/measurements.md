@@ -21,6 +21,17 @@ Hands-on checks made during the build. Each number comes from one run unless sta
 - Returns 1024-dimension vectors, normalised (length 1.0). Two short inputs took about 1.2 s in total (first call, may include model load).
 - Cosine similarity between an English template summary and a Vietnamese sentence about a similar run: 0.489. There is no baseline yet, so this says nothing about quality; the 20-question evaluation will.
 
+## Data pulls and search (2026-11-08)
+
+- COROS connector: about 4 of 30 calls returned a generic "Tool call anomalies detected" text instead of data; retrying worked. Calls made in parallel batches of 14-16 were hit most.
+- Activity list, 12 months, limit 300: 171 records, 56 KB of text (saved to a file by the harness because it exceeded the output limit).
+- Daily training load requested for 56 days returned 31 days; resting HR for 56 days returned 2 values; sleep HRV for 7 days returned none.
+- Loaded totals: lap distance and time sums matched activity totals within 0.003 km and 1 s.
+- Exact vector search (no index) over 171 activity summaries and 50 weekly summaries, `bge-m3`, a handful of queries, no systematic scoring:
+  - Works for categories: "hard anaerobic interval session" ranked the Anaerobic run first; "swimming in open water" returned only swims; "long run about 10 km" returned mostly runs near 10 km.
+  - Weak for numbers: a query copying the template of a 4 km, 10:20/km, HR 108 recovery run did not return the real recovery run in its top 4; "week with load ratio decreasing and little training" returned weeks with 15-17 km of running.
+  - Cosine distances: about 0.16-0.18 for a template-style English query that matched in form, 0.35-0.41 for Vietnamese queries against English summaries.
+
 ## Still to measure
 
 - Longer prompts with real tool sets, context size effects on speed and memory, SQL writing quality, matplotlib code quality, tool choice across many questions.

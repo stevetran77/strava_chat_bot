@@ -21,9 +21,13 @@ log = logging.getLogger("load_sport_records")
 HEADER_RE = re.compile(r"^(\d+)\. (.+?) — (\d{4}-\d{2}-\d{2})$", re.M)
 
 
-def load_env(path=".env"):
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def load_env(path=None):
+    """Read .env from the project root unless a path is given (works from any cwd)."""
     values = {}
-    for line in Path(path).read_text().splitlines():
+    for line in Path(path or PROJECT_ROOT / ".env").read_text().splitlines():
         if line.strip() and not line.startswith("#") and "=" in line:
             key, _, value = line.partition("=")
             values[key.strip()] = value.strip()
