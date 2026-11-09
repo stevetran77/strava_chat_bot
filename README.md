@@ -153,6 +153,6 @@ A pre-commit hook (`.githooks/pre-commit`) runs the tests and blocks `.env`, `da
 
 ## License
 
-No license has been chosen for this project yet, so its code is not licensed for reuse.
+[MIT](LICENSE). Your COROS data is not part of this repository and is not covered by it.
 
 Third-party code: `ui/src/components/ui/ai-prompt-composer-with-model-selector.tsx` is adapted from "AI Prompt Composer with Model Selector" by neeraj singh, published under the MIT License on [21st.dev](https://21st.dev/@hellocloud.webdev/components/ai-prompt-composer-with-model-selector). The attribution is also at the top of the file.
