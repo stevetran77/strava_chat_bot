@@ -26,7 +26,15 @@ from tool_specs import system_prompt  # noqa: E402
 def owner_db(env):
     conn = psycopg.connect(host="127.0.0.1", port=env["POSTGRES_PORT"], dbname=env["POSTGRES_DB"],
                            user=env["POSTGRES_USER"], password=env["POSTGRES_PASSWORD"], autocommit=True)
-    return lambda sql: conn.execute(sql).fetchone()[0]
+
+    def db(sql):
+        return conn.execute(sql).fetchone()[0]
+
+    def rows(sql):
+        return conn.execute(sql).fetchall()
+
+    db.rows = rows
+    return db
 
 
 def normalise(text):

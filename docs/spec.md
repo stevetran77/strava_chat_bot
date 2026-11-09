@@ -16,7 +16,7 @@ Status: planning output of the wayfinder map (`docs/wayfinder/map.md`). Details 
 ## Architecture
 
 - Ingestion (run on demand): Claude session reads the COROS connector -> raw files -> Python parser -> Postgres.
-- Runtime (all local): React chat UI -> Python backend API (FastAPI suggested) -> Ollama (`qwen3:14b`, `bge-m3`) + Postgres/pgvector + a Docker sandbox for chart code.
+- Runtime (all local): React chat UI -> Python backend API (FastAPI suggested) -> Ollama (`qwen3:14b`, `bge-m3`) + Postgres/pgvector. Charts are drawn by the React UI from a JSON spec.
 
 ## Data and ingestion ([data scope ticket](wayfinder/tickets/10-grilling-choose-data-source-and-ingestion.md))
 
@@ -58,11 +58,11 @@ Status: planning output of the wayfinder map (`docs/wayfinder/map.md`). Details 
 - DB protection: a dedicated read-only Postgres role limited to needed tables, with max query time and row count (settings).
 - Every answer shows the query/tool used; empty results say "no data"; numbers not in results are never stated.
 
-## Charts ([sandbox ticket](wayfinder/tickets/13-grilling-chart-code-sandbox.md))
+## Charts (replaces the Docker sandbox of [ticket 13](wayfinder/tickets/13-grilling-chart-code-sandbox.md))
 
-- The LLM writes plotting code; it runs in a short-lived, network-off Docker container. Query result mounted read-only, exactly one PNG out (size-capped), no DB access.
-- Prebuilt image with matplotlib, pandas, numpy (pinned). One retry on error, then text plus table with a "chart could not be drawn" note. The code is shown in the collapsed section.
-- Time, memory, CPU and output limits are settings, chosen after measuring. Docker Desktop must be running.
+- The LLM does not write plotting code. `draw_chart` takes a guarded SELECT plus `kind` (bar or line), `x`, `y` (1 to 3 numeric columns), title and axis labels; the backend checks the columns against the real rows and returns a JSON spec.
+- The React UI draws it with Recharts using the app's theme tokens, with a tooltip and a collapsed data table. One retry on a rejected request. Row cap is `CHART_MAX_ROWS`.
+- Why: colours, fonts and labels always match the theme, text stays readable on phones, and no Docker container or model-written code is needed for charts.
 
 ## UI ([UI ticket](wayfinder/tickets/12-prototype-chat-ui-and-charts.md))
 
@@ -91,7 +91,7 @@ Status: planning output of the wayfinder map (`docs/wayfinder/map.md`). Details 
 2. Raw pull from the connector (12 months) and the parser into `activities`, `laps`, `daily_metrics`.
 3. Summaries, embeddings, vector search; index experiments.
 4. Backend with tools and the read-only role; LLM bake-off.
-5. Chart sandbox image and runner.
+5. Chart spec tool (`src/charts/draw.py`); charts drawn in the UI.
 6. React UI.
 7. Guidance cards and advice behaviour; evaluation set and runs.
 
@@ -100,7 +100,7 @@ Status: planning output of the wayfinder map (`docs/wayfinder/map.md`). Details 
 - Done: Ollama (`qwen3:14b`, `bge-m3`), Postgres 17 + pgvector 0.8.7 in Docker, schema (`sql/001_schema.sql`), Python venv.
 - Loaded: 171 activities (12 months), details for 14 recent runs, laps for 4 runs, 32 days of `daily_metrics`, 171 activity embeddings, 50 weekly embeddings. Loaders are in `src/ingest/`, embedding and search scripts in `src/embed/`; raw files are in `data/raw/` (git-ignored).
 - Search check: vector search finds categories (sport, "Anaerobic") but not numeric meaning (pace, heart rate, "heavy week"). Questions about quantities use SQL, which matches the hybrid design.
-- Not built yet: backend and tools, read-only DB role, chart sandbox, React UI, guidance cards, evaluation set, HNSW experiment.
+- Built since: backend and tools, read-only DB role, chart spec tool, React UI, guidance cards, evaluation set. Not built yet: HNSW experiment.
 
 ## Not yet specified
 

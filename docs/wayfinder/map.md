@@ -35,11 +35,11 @@ label: wayfinder:map
 
 - [Choose the local LLM](tickets/06-grilling-choose-llm.md): Ollama + qwen3:14b (fallback gpt-oss:20b); locked now, bake-off at build; model and context size configurable.
 
-- [Question routing and tool design](tickets/11-grilling-question-routing-and-tools.md): fixed query tools + guarded read-only SQL tool, LLM picks tools, read-only DB role with limits, show the query used, LLM-written plotting code run by the system (sandbox recommended, unconfirmed).
+- [Question routing and tool design](tickets/11-grilling-question-routing-and-tools.md): fixed query tools + guarded read-only SQL tool, LLM picks tools, read-only DB role with limits, show the query used, LLM-written plotting code run by the system (sandbox recommended, unconfirmed). Superseded: charts are now a JSON spec drawn by the UI (see spec.md).
 
 - [Chat UI and chart prototype](tickets/12-prototype-chat-ui-and-charts.md): variant A (single-column chat, inline chart/table, collapsed query); React front end + Python backend API; prototype kept at `prototype/chat_ui_prototype.html`.
 
-- [Sandbox for LLM-written chart code](tickets/13-grilling-chart-code-sandbox.md): short-lived network-off Docker container per run; query result mounted read-only, one PNG out; prebuilt image (matplotlib, pandas, numpy); one retry on failure; code shown collapsed; limits configurable.
+- [Sandbox for LLM-written chart code](tickets/13-grilling-chart-code-sandbox.md): short-lived network-off Docker container per run; query result mounted read-only, one PNG out; prebuilt image (matplotlib, pandas, numpy); one retry on failure; code shown collapsed; limits configurable. Superseded: sandbox removed, see spec.md Charts.
 
 - [Advice and analysis guardrails](tickets/14-grilling-advice-guardrails.md): stats + evidence-backed observations + text-only training suggestions; judged by COROS metrics and running-expert guidance; one-line uncertainty note on advice; no medical/diagnosis/diet advice; cite numbers and dates; advice cases in the evaluation set.
 

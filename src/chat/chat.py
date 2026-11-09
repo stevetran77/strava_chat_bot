@@ -8,17 +8,21 @@ Every tool call is printed with its row count, so each answer shows where its nu
 import argparse
 import json
 import logging
+import re
 import sys
 import urllib.request
 from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "charts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from queries import TOOLS, data_span, load_env  # noqa: E402
+from draw import draw_chart  # noqa: E402
+from queries import TOOLS as QUERY_TOOLS, data_span, load_env  # noqa: E402
 from tool_specs import TOOL_SPECS, system_prompt  # noqa: E402
 
 log = logging.getLogger("chat")
+TOOLS = {**QUERY_TOOLS, "draw_chart": draw_chart}
 
 
 def ask_model(env, messages, think):
@@ -41,26 +45,71 @@ def run_tool(name, arguments):
 
 
 def describe(name, arguments, result):
-    size = f"{len(result)} row(s)" if isinstance(result, list) else "error"
-    return f"  [tool] {name}({json.dumps(arguments, ensure_ascii=False)}) -> {size}"
+    if isinstance(result, dict) and "chart" in result:
+        size = f"chart '{result['chart']['title']}' ({result['rows_used']} rows)"
+    else:
+        size = f"{len(result)} row(s)" if isinstance(result, list) else "error"
+    return f"  [tool] {name}({json.dumps(arguments, ensure_ascii=False)[:300]}) -> {size}"
 
 
-def answer(env, messages, think, used=None):
-    """Loop: model asks for tools, we run them, until it replies with text. `used` collects tool names."""
+def sources_footer(cards):
+    """Source list for the guidance cards the model read, added by code so it never depends on the model."""
+    seen, lines = set(), []
+    for card in cards:
+        if card["source_url"] not in seen:
+            seen.add(card["source_url"])
+            note = "" if card["consensus_level"] == "consensus" else f" ({card['consensus_level']})"
+            lines.append(f"  - {card['topic']}{note}: {card['source_url']}")
+    return "\nSources:\n" + "\n".join(lines) if lines else ""
+
+
+DISCLAIMER = "Based on COROS metrics, not medical advice."
+
+
+def with_disclaimer(text):
+    return text if DISCLAIMER.lower() in text.lower() else f"{text}\n\n{DISCLAIMER}"
+
+
+IMAGE_MARKDOWN = re.compile(r"!\[[^\]]*\]\([^)]*\)")
+TOOL_ROUNDS_EXCEEDED = "[FAIL] too many tool rounds without an answer"
+
+
+def answer_full(env, messages, think):
+    """Loop: model asks for tools, we run them, until it replies with text.
+
+    Returns {"text", "tools": [{name, arguments, summary}], "charts": [spec, ...], "sources": [card, ...]}.
+    Sources, charts and the disclaimer come from code, never from what the model chose to write.
+    """
+    tools, charts, cards = [], [], []
     for _ in range(int(env["CHAT_MAX_TOOL_ROUNDS"])):
         message = ask_model(env, messages, think)
         messages.append(message)
         calls = message.get("tool_calls") or []
         if not calls:
-            return message.get("content", "").strip()
+            text = re.sub(r"\n{3,}", "\n\n", IMAGE_MARKDOWN.sub("", message.get("content", ""))).strip()
+            return {"text": with_disclaimer(text) if cards else text, "tools": tools, "charts": charts, "sources": cards}
         for call in calls:
             name, arguments = call["function"]["name"], call["function"].get("arguments") or {}
             result = run_tool(name, arguments)
-            if used is not None:
-                used.append(name)
-            print(describe(name, arguments, result))
+            if name == "search_guidance" and isinstance(result, list):
+                cards.extend(result)
+            tools.append({"name": name, "arguments": arguments, "summary": describe(name, arguments, result).split("-> ")[-1]})
+            if isinstance(result, dict) and "chart" in result:
+                charts.append(result["chart"])
+                result = {"chart_drawn": True, "rows_used": result["rows_used"], "rows": result["chart"]["rows"][:int(env["TOOL_MAX_ROWS"])]}
             messages.append({"role": "tool", "tool_name": name, "content": json.dumps(result, default=str)})
-    return "[FAIL] too many tool rounds without an answer"
+    return {"text": TOOL_ROUNDS_EXCEEDED, "tools": tools, "charts": charts, "sources": cards}
+
+
+def answer(env, messages, think, used=None):
+    """Text-only view of answer_full for the terminal and the evaluation runner."""
+    result = answer_full(env, messages, think)
+    for tool in result["tools"]:
+        print(f"  [tool] {tool['name']}({json.dumps(tool['arguments'], ensure_ascii=False)[:300]}) -> {tool['summary']}")
+        if used is not None:
+            used.append(tool["name"])
+    chart_lines = "".join(f"\n[chart] {chart['kind']} \"{chart['title']}\" ({len(chart['rows'])} rows)" for chart in result["charts"])
+    return result["text"] + chart_lines + sources_footer(result["sources"])
 
 
 def main():

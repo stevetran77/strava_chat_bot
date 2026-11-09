@@ -6,8 +6,9 @@
 ## Run and check
 
 - Health: `scripts/status.sh` (Ollama, models, container, table counts, venv). DB shell: `scripts/psql.sh "<SQL>"`. Python: `.venv/bin/python`, from any directory.
-- Checks: `.venv/bin/python -m unittest discover -s tests` (parsers), `.venv/bin/python src/checks/check_data.py` (loaded data), `.venv/bin/python src/checks/check_readonly.py` (chatbot role cannot write). The `.githooks/` pre-commit hook runs the tests and blocks `.env`, `data/`, `.venv/`.
-- Layout: `src/ingest/` raw files into Postgres, `src/embed/` summaries, embeddings and search, `src/tools/` query tools the chatbot may call (run as read-only role `chatbot_ro`), `src/chat/` chat loop, `sql/` schema, `data/raw/` connector output (private, git-ignored).
+- Checks: `.venv/bin/python -m unittest discover -s tests` (parsers), `.venv/bin/python src/checks/check_data.py` (loaded data), `.venv/bin/python src/checks/check_readonly.py` (chatbot role cannot write). Evaluation: `.venv/bin/python src/eval/run_eval.py [--only <text>]` (needs Ollama; results in `data/eval/`). The `.githooks/` pre-commit hook runs the tests and blocks `.env`, `data/`, `.venv/`.
+- Layout: `src/ingest/` raw files into Postgres, `src/embed/` summaries, embeddings and search, `src/tools/` query tools the chatbot may call (run as read-only role `chatbot_ro`), `src/chat/` chat loop and tool specs, `src/charts/` chart spec tool (UI draws it, no model-written code), `src/guidance/` expert cards (`load_cards.py`), `src/api/` FastAPI, `src/eval/` evaluation set, `ui/` React + Vite + Recharts, `sql/` schema, `data/raw/` connector output (private, git-ignored).
+- Run the app: `.venv/bin/uvicorn --app-dir src/api server:app --host 127.0.0.1 --port 8000`, then `cd ui && npm run dev` (proxies `/api` to port 8000).
 
 ## COROS connector gotchas
 

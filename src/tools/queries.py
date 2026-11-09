@@ -139,6 +139,21 @@ def search_activities(query, sport_type=None, limit=5, env=None):
           "limit": limit, "max_dist": float(env["SEARCH_MAX_DISTANCE"])}, env)
 
 
+def search_guidance(query, limit=3, env=None):
+    """Approved expert guidance cards closest in meaning to the query, each with its source link."""
+    env = env or load_env()
+    vector = embed_texts(env["OLLAMA_URL"], env["OLLAMA_EMBED_MODEL"], [query])[0]
+    return _run("""
+        SELECT topic, content, source_url, consensus_level, related_metric,
+               CASE consensus_level WHEN 'consensus' THEN NULL
+                    ELSE 'Sources disagree or the evidence is weak: say so, and do not present this as established fact.' END AS caveat,
+               round((embedding <=> %(q)s::vector)::numeric, 3) AS distance
+        FROM guidance_cards WHERE approved_at IS NOT NULL AND embedding IS NOT NULL
+          AND embedding <=> %(q)s::vector <= %(max_dist)s::float
+        ORDER BY embedding <=> %(q)s::vector LIMIT least(%(limit)s, %(max_rows)s)
+    """, {"q": vector_literal(vector), "limit": limit, "max_dist": float(env["GUIDANCE_MAX_DISTANCE"])}, env)
+
+
 def run_sql(sql, env=None):
     """One guarded SELECT. Raises UnsafeSql for anything else; the read-only role is the last defence."""
     query = check_select(sql)
@@ -146,7 +161,7 @@ def run_sql(sql, env=None):
 
 
 TOOLS = {f.__name__: f for f in (recent_activities, activities_between, period_totals, weekly_totals, activity_laps, daily_load,
-                                 search_activities, run_sql)}
+                                 search_activities, search_guidance, run_sql)}
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")

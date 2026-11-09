@@ -36,5 +36,4 @@ Hands-on checks made during the build. Each number comes from one run unless sta
 
 - Longer prompts with real tool sets, context size effects on speed and memory, SQL writing quality, matplotlib code quality, tool choice across many questions.
 - Memory use while `qwen3:14b` and `bge-m3` are both loaded.
-- Docker container start-up latency for the chart sandbox.
 - Embedding comparison on the owner's data (bge-m3 against 1-2 other models).
