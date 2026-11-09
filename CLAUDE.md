@@ -6,8 +6,8 @@
 ## Run and check
 
 - Health: `scripts/status.sh` (Ollama, models, container, table counts, venv). DB shell: `scripts/psql.sh "<SQL>"`. Python: `.venv/bin/python`, from any directory.
-- Checks: `.venv/bin/python -m unittest discover -s tests` (parsers), `.venv/bin/python src/checks/check_data.py` (loaded data). The `.githooks/` pre-commit hook runs the tests and blocks `.env`, `data/`, `.venv/`.
-- Layout: `src/ingest/` raw files into Postgres, `src/embed/` summaries, embeddings and search, `sql/` schema, `data/raw/` connector output (private, git-ignored).
+- Checks: `.venv/bin/python -m unittest discover -s tests` (parsers), `.venv/bin/python src/checks/check_data.py` (loaded data), `.venv/bin/python src/checks/check_readonly.py` (chatbot role cannot write). The `.githooks/` pre-commit hook runs the tests and blocks `.env`, `data/`, `.venv/`.
+- Layout: `src/ingest/` raw files into Postgres, `src/embed/` summaries, embeddings and search, `src/tools/` query tools the chatbot may call (run as read-only role `chatbot_ro`), `src/chat/` chat loop, `sql/` schema, `data/raw/` connector output (private, git-ignored).
 
 ## COROS connector gotchas
 

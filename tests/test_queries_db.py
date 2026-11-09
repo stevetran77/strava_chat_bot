@@ -53,6 +53,23 @@ class QueriesDbTest(unittest.TestCase):
         env = {**queries.load_env(), "TOOL_MAX_ROWS": "2"}
         self.assertEqual(len(queries.recent_activities(limit=10, env=env)), 2)
 
+    def test_run_sql_returns_rows_and_caps_them(self):
+        env = {**queries.load_env(), "TOOL_MAX_ROWS": "3"}
+        self.assertEqual(len(queries.run_sql("SELECT * FROM activities", env=env)), 3)
+        self.assertEqual(queries.run_sql("SELECT count(*) AS n FROM activities")[0]["n"],
+                         self.scalar("SELECT count(*) FROM activities"))
+
+    def test_run_sql_refuses_writes_before_the_database(self):
+        with self.assertRaises(queries.UnsafeSql):
+            queries.run_sql("DELETE FROM laps")
+
+    def test_search_drops_unrelated_query(self):
+        self.assertEqual(queries.search_activities("Xin chào"), [])
+
+    def test_search_finds_runs(self):
+        rows = queries.search_activities("easy run", limit=3)
+        self.assertTrue(rows and all(r["distance"] <= 0.55 for r in rows))
+
 
 if __name__ == "__main__":
     unittest.main()

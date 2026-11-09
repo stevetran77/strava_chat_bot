@@ -13,7 +13,11 @@ import psycopg
 from psycopg.rows import dict_row
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ingest"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "embed"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from embed_activities import embed_texts, vector_literal  # noqa: E402
 from load_sport_records import load_env  # noqa: E402
+from sql_guard import UnsafeSql, check_select  # noqa: E402,F401
 
 log = logging.getLogger("tools")
 
@@ -49,7 +53,8 @@ def period_totals(start, end, sport_type=None, env=None):
     """Totals for activities with start <= local_date <= end (ISO dates), per sport."""
     return _run("""
         SELECT sport_name, count(*) AS activities, round(sum(distance_km), 2) AS distance_km,
-               sum(duration_s) AS duration_s, round(avg(avg_hr)) AS avg_hr, sum(training_load) AS training_load
+               sum(duration_s) AS duration_s, round(sum(duration_s) / nullif(sum(distance_km), 0)) AS avg_pace_s_per_km,
+               round(avg(avg_hr)) AS avg_hr, sum(training_load) AS training_load
         FROM activities
         WHERE local_date BETWEEN %(start)s::date AND %(end)s::date
           AND (%(sport)s::int IS NULL OR sport_type = %(sport)s::int)
@@ -84,7 +89,33 @@ def daily_load(start, end, env=None):
     """, {"start": start, "end": end}, env)
 
 
-TOOLS = {f.__name__: f for f in (recent_activities, period_totals, weekly_totals, activity_laps, daily_load)}
+def search_activities(query, sport_type=None, limit=5, env=None):
+    """Activities whose summary is closest in meaning to the query text (cosine distance, lower = closer).
+
+    Rows farther than SEARCH_MAX_DISTANCE are dropped, so unrelated queries return nothing.
+    """
+    env = env or load_env()
+    vector = embed_texts(env["OLLAMA_URL"], env["OLLAMA_EMBED_MODEL"], [query])[0]
+    return _run("""
+        SELECT a.label_id, a.local_date, a.sport_name, a.distance_km, a.avg_pace_s_per_km, a.avg_hr,
+               a.training_load, a.training_focus, round((e.embedding <=> %(q)s::vector)::numeric, 3) AS distance
+        FROM embeddings e JOIN activities a USING (label_id)
+        WHERE e.kind = 'activity' AND e.model = %(model)s
+          AND (%(sport)s::int IS NULL OR a.sport_type = %(sport)s::int)
+          AND e.embedding <=> %(q)s::vector <= %(max_dist)s::float
+        ORDER BY e.embedding <=> %(q)s::vector LIMIT least(%(limit)s, %(max_rows)s)
+    """, {"q": vector_literal(vector), "model": env["OLLAMA_EMBED_MODEL"], "sport": sport_type,
+          "limit": limit, "max_dist": float(env["SEARCH_MAX_DISTANCE"])}, env)
+
+
+def run_sql(sql, env=None):
+    """One guarded SELECT. Raises UnsafeSql for anything else; the read-only role is the last defence."""
+    query = check_select(sql)
+    return _run(f"SELECT * FROM ({query}) AS q LIMIT %(max_rows)s", {}, env)
+
+
+TOOLS = {f.__name__: f for f in (recent_activities, period_totals, weekly_totals, activity_laps, daily_load,
+                                 search_activities, run_sql)}
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
