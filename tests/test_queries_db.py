@@ -25,14 +25,20 @@ def database_available():
 
 @unittest.skipUnless(database_available(), "local database not reachable")
 class QueriesDbTest(unittest.TestCase):
-    def scalar(self, sql, params=()):
+    def scalar(self, sql, params=None):
         with queries.connect() as conn:
             return list(conn.execute(sql, params).fetchone().values())[0]
 
     def test_weekly_totals_match_independent_sum(self):
-        newest = queries.weekly_totals(1)[0]
-        expected = self.scalar("SELECT sum(distance_km) FROM activities WHERE local_date >= %s", (newest["week_start"],))
-        self.assertAlmostEqual(newest["distance_km"], float(expected), places=1)
+        for row in queries.weekly_totals(4):
+            expected = self.scalar("SELECT coalesce(sum(distance_km), 0) FROM activities "
+                                   "WHERE local_date >= %(d)s AND local_date < %(d)s::date + 7", {"d": row["week_start"]})
+            self.assertAlmostEqual(row["distance_km"], float(expected), places=1, msg=str(row["week_start"]))
+
+    def test_weekly_totals_first_row_is_current_week(self):
+        rows = queries.weekly_totals(3)
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(rows[0]["week_start"], self.scalar("SELECT date_trunc('week', current_date)::date"))
 
     def test_period_totals_count_matches(self):
         rows = queries.period_totals("2000-01-01", "2100-01-01")
@@ -47,7 +53,12 @@ class QueriesDbTest(unittest.TestCase):
         self.assertTrue(all(r["sport_name"] == "Outdoor Run" for r in queries.recent_activities(100, 10)))
 
     def test_laps_of_unknown_activity_is_empty(self):
-        self.assertEqual(queries.activity_laps(1), [])
+        self.assertEqual(queries.activity_laps('1999-01-01'), [])
+
+    def test_laps_by_date_sum_to_activity_distance(self):
+        laps = queries.activity_laps('2026-11-07', sport_type=100)
+        expected = self.scalar("SELECT distance_km FROM activities WHERE local_date = '2026-11-07' AND sport_type = 100")
+        self.assertAlmostEqual(sum(l['distance_km'] for l in laps), float(expected), delta=0.02)
 
     def test_row_limit_comes_from_env(self):
         env = {**queries.load_env(), "TOOL_MAX_ROWS": "2"}

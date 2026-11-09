@@ -39,14 +39,27 @@ def _run(sql, params, env=None):
     return [{k: (float(v) if hasattr(v, "as_tuple") else v) for k, v in row.items()} for row in rows]
 
 
+ACTIVITY_COLUMNS = """local_date, sport_name, distance_km, duration_s, avg_pace_s_per_km, avg_hr, avg_cadence,
+               avg_power, elevation_gain_m, calories, training_load, aerobic_te, anaerobic_te, training_focus"""
+
+
 def recent_activities(sport_type=None, limit=5, env=None):
     """Newest activities first, optionally one sport_type (100 = outdoor run)."""
-    return _run("""
-        SELECT label_id, local_date, sport_name, distance_km, duration_s, avg_pace_s_per_km,
-               avg_hr, training_load, training_focus
+    return _run(f"""
+        SELECT {ACTIVITY_COLUMNS}
         FROM activities WHERE (%(sport)s::int IS NULL OR sport_type = %(sport)s::int)
         ORDER BY started_at DESC NULLS LAST, local_date DESC LIMIT least(%(limit)s, %(max_rows)s)
     """, {"sport": sport_type, "limit": limit}, env)
+
+
+def activities_between(start, end, sport_type=None, env=None):
+    """Each activity with start <= local_date <= end (ISO dates), oldest first. Use for 'the run on 2026-11-07'."""
+    return _run(f"""
+        SELECT {ACTIVITY_COLUMNS}
+        FROM activities WHERE local_date BETWEEN %(start)s::date AND %(end)s::date
+          AND (%(sport)s::int IS NULL OR sport_type = %(sport)s::int)
+        ORDER BY started_at LIMIT %(max_rows)s
+    """, {"start": start, "end": end, "sport": sport_type}, env)
 
 
 def period_totals(start, end, sport_type=None, env=None):
@@ -63,21 +76,39 @@ def period_totals(start, end, sport_type=None, env=None):
 
 
 def weekly_totals(weeks=8, sport_type=None, env=None):
-    """Distance, time and count per ISO week (Monday start), newest week first."""
+    """Distance, time and count for each of the last `weeks` ISO weeks (Monday start), newest first.
+
+    The current week is always the first row, with zeros when nothing has happened yet.
+    """
     return _run("""
-        SELECT date_trunc('week', local_date)::date AS week_start, count(*) AS activities,
-               round(sum(distance_km), 2) AS distance_km, sum(duration_s) AS duration_s
-        FROM activities WHERE (%(sport)s::int IS NULL OR sport_type = %(sport)s::int)
-        GROUP BY 1 ORDER BY 1 DESC LIMIT least(%(weeks)s, %(max_rows)s)
+        SELECT w.week_start, count(a.label_id) AS activities,
+               coalesce(round(sum(a.distance_km), 2), 0) AS distance_km, coalesce(sum(a.duration_s), 0) AS duration_s
+        FROM generate_series(date_trunc('week', current_date)::date - 7 * (least(%(weeks)s, %(max_rows)s) - 1),
+                             date_trunc('week', current_date)::date, interval '7 days') AS g(d)
+        CROSS JOIN LATERAL (SELECT g.d::date AS week_start) w
+        LEFT JOIN activities a ON date_trunc('week', a.local_date)::date = w.week_start
+                              AND (%(sport)s::int IS NULL OR a.sport_type = %(sport)s::int)
+        GROUP BY w.week_start ORDER BY w.week_start DESC
     """, {"weeks": weeks, "sport": sport_type}, env)
 
 
-def activity_laps(label_id, env=None):
-    """Per-km laps of one activity. Empty when laps were not loaded for it."""
+def data_span(env=None):
+    """First and last activity date in the database."""
+    return _run("SELECT min(local_date) AS first_day, max(local_date) AS last_day FROM activities", {}, env)[0]
+
+
+def activity_laps(date, sport_type=None, env=None):
+    """Per-km laps of the activities on one local date (ISO). Empty when laps were not loaded for them.
+
+    Keyed by date, not label_id: 18-digit ids lose precision when a model copies them as JSON numbers.
+    """
     return _run("""
-        SELECT lap_index, distance_km, time_s, avg_pace_s_per_km, avg_hr, max_hr, avg_cadence
-        FROM laps WHERE label_id = %(label_id)s ORDER BY lap_index LIMIT %(max_rows)s
-    """, {"label_id": label_id}, env)
+        SELECT a.local_date, a.sport_name, l.lap_index, l.distance_km, l.time_s, l.avg_pace_s_per_km,
+               l.avg_hr, l.max_hr, l.avg_cadence
+        FROM laps l JOIN activities a USING (label_id)
+        WHERE a.local_date = %(date)s::date AND (%(sport)s::int IS NULL OR a.sport_type = %(sport)s::int)
+        ORDER BY a.started_at, l.lap_index LIMIT %(max_rows)s
+    """, {"date": date, "sport": sport_type}, env)
 
 
 def daily_load(start, end, env=None):
@@ -97,7 +128,7 @@ def search_activities(query, sport_type=None, limit=5, env=None):
     env = env or load_env()
     vector = embed_texts(env["OLLAMA_URL"], env["OLLAMA_EMBED_MODEL"], [query])[0]
     return _run("""
-        SELECT a.label_id, a.local_date, a.sport_name, a.distance_km, a.avg_pace_s_per_km, a.avg_hr,
+        SELECT a.local_date, a.sport_name, a.distance_km, a.avg_pace_s_per_km, a.avg_hr,
                a.training_load, a.training_focus, round((e.embedding <=> %(q)s::vector)::numeric, 3) AS distance
         FROM embeddings e JOIN activities a USING (label_id)
         WHERE e.kind = 'activity' AND e.model = %(model)s
@@ -114,7 +145,7 @@ def run_sql(sql, env=None):
     return _run(f"SELECT * FROM ({query}) AS q LIMIT %(max_rows)s", {}, env)
 
 
-TOOLS = {f.__name__: f for f in (recent_activities, period_totals, weekly_totals, activity_laps, daily_load,
+TOOLS = {f.__name__: f for f in (recent_activities, activities_between, period_totals, weekly_totals, activity_laps, daily_load,
                                  search_activities, run_sql)}
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from queries import TOOLS, load_env  # noqa: E402
+from queries import TOOLS, data_span, load_env  # noqa: E402
 from tool_specs import TOOL_SPECS, system_prompt  # noqa: E402
 
 log = logging.getLogger("chat")
@@ -45,8 +45,8 @@ def describe(name, arguments, result):
     return f"  [tool] {name}({json.dumps(arguments, ensure_ascii=False)}) -> {size}"
 
 
-def answer(env, messages, think):
-    """Loop: model asks for tools, we run them, until it replies with text."""
+def answer(env, messages, think, used=None):
+    """Loop: model asks for tools, we run them, until it replies with text. `used` collects tool names."""
     for _ in range(int(env["CHAT_MAX_TOOL_ROUNDS"])):
         message = ask_model(env, messages, think)
         messages.append(message)
@@ -56,6 +56,8 @@ def answer(env, messages, think):
         for call in calls:
             name, arguments = call["function"]["name"], call["function"].get("arguments") or {}
             result = run_tool(name, arguments)
+            if used is not None:
+                used.append(name)
             print(describe(name, arguments, result))
             messages.append({"role": "tool", "tool_name": name, "content": json.dumps(result, default=str)})
     return "[FAIL] too many tool rounds without an answer"
@@ -68,7 +70,8 @@ def main():
     args = parser.parse_args()
     logging.basicConfig(level=logging.WARNING, format="%(message)s")
     env = load_env()
-    messages = [{"role": "system", "content": system_prompt(date.today())}]
+    span = data_span()
+    messages = [{"role": "system", "content": system_prompt(date.today(), span["first_day"], span["last_day"])}]
     while True:
         question = args.question or input("\nYou> ").strip()
         if not question:
