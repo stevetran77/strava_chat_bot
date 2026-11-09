@@ -11,6 +11,14 @@ for path in .env data/raw .venv; do
     git check-ignore -q "$path" || fail "$path is not ignored by .gitignore"
 done
 
+# Secret values from .env must not appear in any staged change, under any file name.
+added=$(git diff --cached -U0 --no-color | grep '^+' | grep -v '^+++')
+while IFS='=' read -r key value; do
+    case "$key" in *PASSWORD*|*SECRET*|*TOKEN*|*API_KEY*) ;; *) continue ;; esac
+    [ "${#value}" -ge 8 ] || continue
+    printf '%s\n' "$added" | grep -qF -- "$value" && fail "staged change contains the value of $key from .env"
+done < .env
+
 [ -x .venv/bin/python ] || fail ".venv missing, cannot run tests"
 .venv/bin/python -m unittest discover -s tests -q || fail "parser tests failed"
 echo "[OK] pre-commit checks passed"
