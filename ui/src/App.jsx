@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import Particles from "./Particles";
-import Composer from "./Composer";
+import AIComposer from "./components/ui/ai-prompt-composer-with-model-selector";
 
 // The chart library is only fetched when an answer contains a chart.
 const Chart = lazy(() => import("./Chart"));
@@ -171,7 +171,7 @@ export default function App() {
         <div ref={bottom} />
       </main>
       <form onSubmit={(event) => event.preventDefault()}>
-        <Composer models={models.list} defaultModelId={models.default} disabled={busy}
+        <AIComposer models={models.list} defaultModelId={models.default} disabled={busy}
           placeholder="Hỏi bằng tiếng Việt hoặc English…"
           onSubmit={({ prompt, modelId, think }) => ask(prompt, { model: modelId, think })} />
       </form>

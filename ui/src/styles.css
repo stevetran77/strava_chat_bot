@@ -1,3 +1,8 @@
+/* Tailwind utilities only: no preflight, so the hand-written styles below stay in charge of element defaults. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
 /* World: an evening review at the desk. The page is a deep aubergine night with a slow field of white particles that
    shift with the pointer; the chat is a set of dark panels tinted from the same hue. */
 :root {
@@ -115,18 +120,6 @@ pre { background: rgb(0 0 0 / 0.35); border: 1px solid var(--line); border-radiu
 .working span { margin-left: 8px; }
 @keyframes pulse { 40% { opacity: 1; transform: scale(1.5); } }
 
-.composer { display: flex; flex-direction: column; gap: 8px; padding: 10px 10px 10px 16px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line-strong); transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease); }
-.composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(184 169 255 / 0.18); }
-.composer textarea { width: 100%; resize: none; background: transparent; border: 0; outline: none; color: var(--ink); font: inherit; line-height: 1.5; padding: 6px 0; max-height: 9em; }
-.composer textarea::placeholder { color: var(--ink-muted); }
-.composer-bar { display: flex; align-items: center; gap: 8px; }
-.composer select, .think { min-height: 36px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent; color: var(--ink-soft); font: inherit; font-size: 0.8125rem; padding: 0 12px; cursor: pointer; transition: color 160ms var(--ease), border-color 160ms var(--ease), background 160ms var(--ease); }
-.composer select option { background: var(--panel-solid); color: var(--ink); }
-.composer select:hover, .think:hover { color: var(--ink); border-color: var(--accent); }
-.think[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.send { margin-left: auto; flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; cursor: pointer; transition: transform 160ms var(--ease), opacity 160ms var(--ease); }
-.send:hover:not(:disabled) { transform: translateY(-1px); }
-.send:disabled { opacity: 0.35; cursor: default; }
 form { position: sticky; bottom: 0; padding: 14px 0 20px; background: linear-gradient(to top, var(--page) 55%, transparent); }
 @media (max-width: 560px) {
   .app { padding: 0 14px; }
