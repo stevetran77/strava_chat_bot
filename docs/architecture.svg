@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1040" viewBox="0 0 1400 1040">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5b6b7f"/></marker></defs>
+<style>
+text{font-family:-apple-system,"Helvetica Neue",Arial,sans-serif}
+.h{font-size:34px;font-weight:700;fill:#16202e}
+.sub{font-size:18px;fill:#5b6b7f}
+.t{font-size:20px;font-weight:700}
+.s{font-size:15px;fill:#445266}
+.lane{font-size:15px;font-weight:700;letter-spacing:1.5px}
+.lbl{font-size:14px;fill:#5b6b7f;font-style:italic}
+.tag{font-size:14px;font-weight:600;fill:#16202e}
+</style>
+<rect width="1400" height="1040" fill="#fbfaf7"/>
+<text x="50" y="62" class="h">COROS Chat: a local fitness chatbot with hybrid retrieval</text>
+<text x="50" y="92" class="sub">Ask in Vietnamese or English. Numbers come from SQL, meaning comes from vectors, and nothing leaves the machine.</text>
+<rect x="30" y="118" width="1340" height="600" rx="20" fill="#eef4fb" stroke="#c6d9ee" stroke-width="1.5"/>
+<text x="54" y="148" class="lane" fill="#2a5d9f">RUNTIME  (all local)</text>
+<rect x="50" y="170" width="270" height="100" rx="14" fill="#ffffff" stroke="#2a5d9f" stroke-width="2"/>
+<text x="185.0" y="208" text-anchor="middle" class="t" fill="#16202e">React chat UI</text>
+<text x="185.0" y="234" text-anchor="middle" class="s">Vite + Recharts</text>
+<text x="185.0" y="256" text-anchor="middle" class="s">draws charts from a JSON spec</text>
+<rect x="390" y="170" width="270" height="100" rx="14" fill="#ffffff" stroke="#2a5d9f" stroke-width="2"/>
+<text x="525.0" y="208" text-anchor="middle" class="t" fill="#16202e">FastAPI backend</text>
+<text x="525.0" y="234" text-anchor="middle" class="s">Python, one /chat endpoint</text>
+<text x="525.0" y="256" text-anchor="middle" class="s">returns answer + tools used</text>
+<rect x="730" y="170" width="270" height="100" rx="14" fill="#ffffff" stroke="#2a5d9f" stroke-width="2"/>
+<text x="865.0" y="208" text-anchor="middle" class="t" fill="#16202e">Chat loop</text>
+<text x="865.0" y="234" text-anchor="middle" class="s">tool calling, scope rule</text>
+<text x="865.0" y="256" text-anchor="middle" class="s">sources footer added by code</text>
+<rect x="1070" y="170" width="270" height="100" rx="14" fill="#ffffff" stroke="#7a4fb5" stroke-width="2"/>
+<text x="1205.0" y="208" text-anchor="middle" class="t" fill="#16202e">Ollama  qwen3:14b</text>
+<text x="1205.0" y="234" text-anchor="middle" class="s">local LLM, picks the tools</text>
+<text x="1205.0" y="256" text-anchor="middle" class="s">model name is a setting</text>
+<line x1="320" y1="220" x2="390" y2="220" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)" marker-start="url(#ah)"/>
+<line x1="660" y1="220" x2="730" y2="220" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)" marker-start="url(#ah)"/>
+<line x1="1000" y1="220" x2="1070" y2="220" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)" marker-start="url(#ah)"/>
+<text x="54" y="322" class="lbl">Tools the model can call</text>
+<line x1="865.0" y1="270" x2="865.0" y2="340" stroke="#5b6b7f" stroke-width="2.5"/>
+<line x1="185.0" y1="340" x2="1205.0" y2="340" stroke="#5b6b7f" stroke-width="2.5"/>
+<line x1="185.0" y1="340" x2="185.0" y2="372" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="50" y="374" width="270" height="118" rx="14" fill="#ffffff" stroke="#2a5d9f" stroke-width="2"/>
+<text x="185.0" y="412" text-anchor="middle" class="t" fill="#16202e">Query tools</text>
+<text x="185.0" y="438" text-anchor="middle" class="s">weekly_totals, period_totals,</text>
+<text x="185.0" y="460" text-anchor="middle" class="s">daily_load, activity_laps,</text>
+<text x="185.0" y="482" text-anchor="middle" class="s">guarded run_sql</text>
+<line x1="525.0" y1="340" x2="525.0" y2="372" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="390" y="374" width="270" height="118" rx="14" fill="#ffffff" stroke="#2a5d9f" stroke-width="2"/>
+<text x="525.0" y="412" text-anchor="middle" class="t" fill="#16202e">Vector search</text>
+<text x="525.0" y="438" text-anchor="middle" class="s">similar workouts by meaning</text>
+<text x="525.0" y="460" text-anchor="middle" class="s">bge-m3 embeddings,</text>
+<text x="525.0" y="482" text-anchor="middle" class="s">filtered by SQL first</text>
+<line x1="865.0" y1="340" x2="865.0" y2="372" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="730" y="374" width="270" height="118" rx="14" fill="#ffffff" stroke="#2a5d9f" stroke-width="2"/>
+<text x="865.0" y="412" text-anchor="middle" class="t" fill="#16202e">Guidance cards</text>
+<text x="865.0" y="438" text-anchor="middle" class="s">14 paraphrased expert cards</text>
+<text x="865.0" y="460" text-anchor="middle" class="s">each with a source link</text>
+<text x="865.0" y="482" text-anchor="middle" class="s">and a consensus level</text>
+<line x1="1205.0" y1="340" x2="1205.0" y2="372" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="1070" y="374" width="270" height="118" rx="14" fill="#ffffff" stroke="#2a5d9f" stroke-width="2"/>
+<text x="1205.0" y="412" text-anchor="middle" class="t" fill="#16202e">draw_chart</text>
+<text x="1205.0" y="438" text-anchor="middle" class="s">returns a validated chart spec</text>
+<text x="1205.0" y="460" text-anchor="middle" class="s">bar or line, never</text>
+<text x="1205.0" y="482" text-anchor="middle" class="s">model-written code</text>
+<line x1="185.0" y1="492" x2="185.0" y2="560" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="525.0" y1="492" x2="525.0" y2="560" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="865.0" y1="492" x2="865.0" y2="560" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="1205.0" y1="492" x2="1205.0" y2="560" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<rect x="50" y="562" width="1290" height="132" rx="16" fill="#fff6e0" stroke="#d99a1e" stroke-width="2"/>
+<text x="695" y="598" text-anchor="middle" class="t" fill="#16202e">Postgres 17 + pgvector  (Docker, local)</text>
+<text x="695" y="628" text-anchor="middle" class="s">activities  |  laps  |  daily_metrics  |  embeddings (1024-dim)  |  guidance_cards</text>
+<rect x="470" y="644" width="450" height="36" rx="18" fill="#ffffff" stroke="#d99a1e" stroke-width="1.5"/>
+<text x="695" y="668" text-anchor="middle" class="tag">Chatbot role chatbot_ro: SELECT only, 5 s timeout</text>
+<text x="1000" y="580" class="lbl" text-anchor="middle"></text>
+<rect x="30" y="760" width="1340" height="226" rx="20" fill="#f3eefa" stroke="#d6c8ea" stroke-width="1.5"/>
+<text x="54" y="792" class="lane" fill="#6a43a8">INGESTION  (on demand, re-runnable)</text>
+<rect x="50" y="830" width="220" height="100" rx="14" fill="#ffffff" stroke="#6a43a8" stroke-width="2"/>
+<text x="160.0" y="868" text-anchor="middle" class="t" fill="#16202e">COROS connector</text>
+<text x="160.0" y="894" text-anchor="middle" class="s">claude.ai, read-only</text>
+<text x="160.0" y="916" text-anchor="middle" class="s">activities, laps, load</text>
+<rect x="320" y="830" width="220" height="100" rx="14" fill="#ffffff" stroke="#6a43a8" stroke-width="2"/>
+<text x="430.0" y="868" text-anchor="middle" class="t" fill="#16202e">Claude session</text>
+<text x="430.0" y="894" text-anchor="middle" class="s">pulls by date range,</text>
+<text x="430.0" y="916" text-anchor="middle" class="s">retries on anomalies</text>
+<rect x="590" y="830" width="220" height="100" rx="14" fill="#ffffff" stroke="#6a43a8" stroke-width="2"/>
+<text x="700.0" y="868" text-anchor="middle" class="t" fill="#16202e">Raw files</text>
+<text x="700.0" y="894" text-anchor="middle" class="s">data/raw/, kept</text>
+<text x="700.0" y="916" text-anchor="middle" class="s">exactly as received</text>
+<rect x="860" y="830" width="220" height="100" rx="14" fill="#ffffff" stroke="#6a43a8" stroke-width="2"/>
+<text x="970.0" y="868" text-anchor="middle" class="t" fill="#16202e">Python parsers</text>
+<text x="970.0" y="894" text-anchor="middle" class="s">units normalised,</text>
+<text x="970.0" y="916" text-anchor="middle" class="s">idempotent by labelId</text>
+<rect x="1130" y="830" width="220" height="100" rx="14" fill="#ffffff" stroke="#6a43a8" stroke-width="2"/>
+<text x="1240.0" y="868" text-anchor="middle" class="t" fill="#16202e">Embedding job</text>
+<text x="1240.0" y="894" text-anchor="middle" class="s">English summary per</text>
+<text x="1240.0" y="916" text-anchor="middle" class="s">activity and per week</text>
+<line x1="270" y1="880" x2="320" y2="880" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="540" y1="880" x2="590" y2="880" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="810" y1="880" x2="860" y2="880" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="1080" y1="880" x2="1130" y2="880" stroke="#5b6b7f" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="970.0" y1="830" x2="970.0" y2="696" stroke="#6a43a8" stroke-width="2.5" marker-end="url(#ah)"/>
+<line x1="1240.0" y1="830" x2="1240.0" y2="696" stroke="#6a43a8" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="960.0" y="760" class="lbl" text-anchor="end"></text>
+<text x="50" y="1020" class="tag">Python  |  FastAPI  |  React  |  Ollama  |  Postgres + pgvector  |  Docker  |  bge-m3  |  qwen3:14b</text>
+</svg>

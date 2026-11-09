@@ -6,7 +6,7 @@ It is also a learning project: how a vector database (Postgres + pgvector) fits 
 Ask things like:
 
 - "How many km did I run this week?"
-- "Plot my weekly running km for the last 12 weeks."
+- "Plot my weekly running km for the last month."
 - "Is my training load OK, and how should I train next week?"
 - "Find my long, slow runs."
 

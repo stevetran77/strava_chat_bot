@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="940" viewBox="0 0 1400 940">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5b6b7f"/></marker></defs>
+<style>text{font-family:-apple-system,"Helvetica Neue",Arial,sans-serif}
+.h{font-size:40px;font-weight:700;fill:#16202e}.sub{font-size:21px;fill:#5b6b7f}
+.t{font-size:28px;font-weight:700;fill:#16202e}.s{font-size:20px;fill:#445266}
+.lane{font-size:18px;font-weight:700;letter-spacing:2px}</style>
+<rect width="1400" height="940" fill="#fbfaf7"/>
+<text x="50" y="68" class="h">COROS Chat: a fully local AI fitness chatbot</text>
+<text x="50" y="104" class="sub">SQL for the numbers, vectors for the meaning, nothing leaves my machine.</text>
+<text x="50" y="164" class="lane" fill="#2a5d9f">ASK  (runtime)</text>
+<rect x="50" y="184" width="360" height="110" rx="16" fill="#fff" stroke="#2a5d9f" stroke-width="3"/>
+<text x="230.0" y="235.0" text-anchor="middle" class="t">React UI</text>
+<text x="230.0" y="265.0" text-anchor="middle" class="s">charts drawn from a spec</text>
+<rect x="520" y="184" width="360" height="110" rx="16" fill="#fff" stroke="#2a5d9f" stroke-width="3"/>
+<text x="700.0" y="235.0" text-anchor="middle" class="t">FastAPI + chat loop</text>
+<text x="700.0" y="265.0" text-anchor="middle" class="s">picks tools, adds sources</text>
+<rect x="990" y="184" width="360" height="110" rx="16" fill="#fff" stroke="#7a4fb5" stroke-width="3"/>
+<text x="1170.0" y="235.0" text-anchor="middle" class="t">Ollama qwen3:14b</text>
+<text x="1170.0" y="265.0" text-anchor="middle" class="s">local LLM</text>
+<line x1="410" y1="239" x2="520" y2="239" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)" marker-start="url(#ah)"/>
+<line x1="880" y1="239" x2="990" y2="239" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)" marker-start="url(#ah)"/>
+<line x1="700.0" y1="294" x2="700.0" y2="335" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="230.0" y1="335" x2="1170.0" y2="335" stroke="#5b6b7f" stroke-width="3"/>
+<line x1="230.0" y1="335" x2="230.0" y2="370" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="700.0" y1="335" x2="700.0" y2="370" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="1170.0" y1="335" x2="1170.0" y2="370" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)"/>
+<rect x="50" y="372" width="360" height="100" rx="16" fill="#fff" stroke="#2a5d9f" stroke-width="3"/>
+<text x="230.0" y="418.0" text-anchor="middle" class="t">SQL tools</text>
+<text x="230.0" y="448.0" text-anchor="middle" class="s">read-only, guarded</text>
+<rect x="520" y="372" width="360" height="100" rx="16" fill="#fff" stroke="#2a5d9f" stroke-width="3"/>
+<text x="700.0" y="418.0" text-anchor="middle" class="t">Vector search</text>
+<text x="700.0" y="448.0" text-anchor="middle" class="s">bge-m3 embeddings</text>
+<rect x="990" y="372" width="360" height="100" rx="16" fill="#fff" stroke="#2a5d9f" stroke-width="3"/>
+<text x="1170.0" y="418.0" text-anchor="middle" class="t">Guidance cards</text>
+<text x="1170.0" y="448.0" text-anchor="middle" class="s">expert sources</text>
+<line x1="230.0" y1="472" x2="230.0" y2="540" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="700.0" y1="472" x2="700.0" y2="540" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="1170.0" y1="472" x2="1170.0" y2="540" stroke="#5b6b7f" stroke-width="3" marker-end="url(#ah)"/>
+<rect x="50" y="542" width="1300" height="120" rx="18" fill="#fff6e0" stroke="#d99a1e" stroke-width="3"/>
+<text x="700" y="590" text-anchor="middle" class="t">Postgres + pgvector (Docker)</text>
+<text x="700" y="628" text-anchor="middle" class="s">chatbot role is SELECT only</text>
+<text x="50" y="738" class="lane" fill="#6a43a8">LOAD  (on demand)</text>
+<rect x="50" y="758" width="360" height="100" rx="16" fill="#fff" stroke="#6a43a8" stroke-width="3"/>
+<text x="230.0" y="804.0" text-anchor="middle" class="t">COROS connector</text>
+<text x="230.0" y="834.0" text-anchor="middle" class="s">via a Claude session</text>
+<rect x="520" y="758" width="360" height="100" rx="16" fill="#fff" stroke="#6a43a8" stroke-width="3"/>
+<text x="700.0" y="804.0" text-anchor="middle" class="t">Raw files</text>
+<text x="700.0" y="834.0" text-anchor="middle" class="s">kept exactly as received</text>
+<rect x="990" y="758" width="360" height="100" rx="16" fill="#fff" stroke="#6a43a8" stroke-width="3"/>
+<text x="1170.0" y="804.0" text-anchor="middle" class="t">Parsers + embeddings</text>
+<text x="1170.0" y="834.0" text-anchor="middle" class="s">re-runnable</text>
+<line x1="410" y1="808" x2="520" y2="808" stroke="#6a43a8" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="880" y1="808" x2="990" y2="808" stroke="#6a43a8" stroke-width="3" marker-end="url(#ah)"/>
+<line x1="1170.0" y1="758" x2="1170.0" y2="664" stroke="#6a43a8" stroke-width="3" marker-end="url(#ah)"/>
+<text x="50" y="910" class="s" font-weight="600">Python  |  FastAPI  |  React  |  Ollama  |  Postgres + pgvector</text>
+</svg>

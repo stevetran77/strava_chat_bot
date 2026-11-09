@@ -1,30 +1,27 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import Particles from "./Particles";
 import AIComposer from "./components/ui/ai-prompt-composer-with-model-selector";
+import { describeFailure, useLang } from "./i18n";
+import SquishSwitch from "./SquishSwitch";
+import { useTheme } from "./theme";
 
 // The chart library is only fetched when an answer contains a chart.
 const Chart = lazy(() => import("./Chart"));
 
-// The page is one dark world: white particles on a deep aubergine page.
-const PARTICLE_COLORS = ["#ffffff", "#ffffff", "#ffffff"];
+// Particles are white on the dark page and violet on the light one.
+const PARTICLES = {
+  dark: { colors: ["#ffffff", "#ffffff", "#ffffff"], glow: 0.5, opacity: 1 },
+  light: { colors: ["#6a56e6", "#6a56e6", "#6a56e6"], glow: 0.25, opacity: 0.6 },
+};
 
-const EXAMPLES = [
-  "Tuần này tôi chạy bao nhiêu km?",
-  "Vẽ biểu đồ số km chạy mỗi tuần trong 12 tuần gần nhất",
-  "Tỉ lệ tải gần đây của tôi có ổn không, tuần sau nên tập thế nào?",
-  "Which month did I run the most km?",
-];
+// Both header switches share one size, one palette and one motion; the active option sits on the accent thumb.
+const SWITCH = { trackColor: "var(--switch-track)", thumbColor: "var(--accent)", activeColor: "var(--accent-ink)", idleColor: "var(--ink-muted)",
+  width: 76, height: 38, radius: 19, stretch: 44, speed: 50, hoverScale: 1.04, colorDuration: 320 };
 
-// Each failure gets a message that names the problem and the way out.
-function describeFailure(error) {
-  if (error.status === 400) return "Câu hỏi không hợp lệ. Hãy diễn đạt lại rồi gửi lại.";
-  if (error.status === 502 || error.status === 503 || error.status === 504) return "Chưa kết nối được máy chủ API. Kiểm tra uvicorn đã chạy chưa, rồi bấm Thử lại.";
-  if (error.status >= 500) return "Máy chủ gặp lỗi khi xử lý câu hỏi này. Bấm Thử lại, hoặc diễn đạt lại câu hỏi.";
-  if (error.status) return `Máy chủ trả lỗi ${error.status}. Bấm Thử lại.`;
-  return "Không kết nối được máy chủ. Kiểm tra mạng nội bộ và uvicorn, rồi bấm Thử lại.";
-}
+const Sun = () => <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="2.8" stroke="currentColor" strokeWidth="1.5" /><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>;
+const Moon = () => <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>;
 
-async function sendQuestion(question, conversationId, options) {
+async function sendQuestion(t, question, conversationId, options) {
   let response;
   try {
     response = await fetch("/api/chat", {
@@ -33,9 +30,9 @@ async function sendQuestion(question, conversationId, options) {
       body: JSON.stringify({ question, conversation_id: conversationId, ...options }),
     });
   } catch {
-    throw new Error(describeFailure({}));
+    throw new Error(describeFailure(t, {}));
   }
-  if (!response.ok) throw new Error(describeFailure({ status: response.status }));
+  if (!response.ok) throw new Error(describeFailure(t, { status: response.status }));
   return response.json();
 }
 
@@ -44,6 +41,13 @@ async function loadModels() {
   const response = await fetch("/api/models");
   if (!response.ok) throw new Error(`models ${response.status}`);
   return response.json();
+}
+
+// The glass sheen follows the pointer: the pointer position inside the box is exposed as CSS variables.
+function follow(event) {
+  const box = event.currentTarget.getBoundingClientRect();
+  event.currentTarget.style.setProperty("--mx", `${event.clientX - box.left}px`);
+  event.currentTarget.style.setProperty("--my", `${event.clientY - box.top}px`);
 }
 
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -59,16 +63,17 @@ const ArrowUp = () => (
 );
 
 function ToolDetails({ tools }) {
+  const { t } = useLang();
   if (!tools.length) return null;
   return (
     <details className="details">
-      <summary><Chevron />Công cụ đã dùng ({tools.length})</summary>
+      <summary><Chevron />{t.toolsUsed(tools.length)}</summary>
       {tools.map((tool, index) => (
         <div key={index} className="tool">
           <strong>{tool.name}</strong> <span className="muted">→ {tool.summary}</span>
-          {tool.arguments.sql && <pre tabIndex={0} role="region" aria-label="Câu truy vấn SQL">{tool.arguments.sql}</pre>}
-          {tool.arguments.code && <pre tabIndex={0} role="region" aria-label="Mã vẽ biểu đồ">{tool.arguments.code}</pre>}
-          {!tool.arguments.sql && !tool.arguments.code && <pre tabIndex={0} role="region" aria-label={`Tham số của ${tool.name}`}>{JSON.stringify(tool.arguments, null, 2)}</pre>}
+          {tool.arguments.sql && <pre tabIndex={0} role="region" aria-label={t.sqlLabel}>{tool.arguments.sql}</pre>}
+          {tool.arguments.code && <pre tabIndex={0} role="region" aria-label={t.codeLabel}>{tool.arguments.code}</pre>}
+          {!tool.arguments.sql && !tool.arguments.code && <pre tabIndex={0} role="region" aria-label={t.argsLabel(tool.name)}>{JSON.stringify(tool.arguments, null, 2)}</pre>}
         </div>
       ))}
     </details>
@@ -76,14 +81,16 @@ function ToolDetails({ tools }) {
 }
 
 function Message({ message, rowRef, onRetry }) {
-  if (message.role === "user") return <div className="row user" ref={rowRef}><div className="bubble user">{message.text}</div></div>;
+  const { t } = useLang();
+  if (message.role === "user") return <div className="row user" ref={rowRef}><div className="bubble user" onPointerMove={follow}>{message.text}</div></div>;
   return (
     <div className="row" ref={rowRef}>
-      <div className={`bubble ${message.error ? "error" : ""}`} role={message.error ? "alert" : undefined}>
+      <div className={`bubble ${message.error ? "error" : ""}`} role={message.error ? "alert" : undefined} onPointerMove={follow}>
+        <div className="bubble-fold"><div className="bubble-inner">
         <p className="text">{message.text}</p>
-        {message.error && onRetry && <button type="button" className="retry" onClick={onRetry}>Thử lại</button>}
+        {message.error && onRetry && <button type="button" className="retry" onClick={onRetry}>{t.retry}</button>}
         {message.charts?.map((spec, index) => (
-          <Suspense key={index} fallback={<div className="chart-loading" role="status">Đang tải biểu đồ…</div>}><Chart spec={spec} /></Suspense>
+          <Suspense key={index} fallback={<div className="chart-loading" role="status">{t.chartLoading}</div>}><Chart spec={spec} /></Suspense>
         ))}
         {message.sources?.length > 0 && (
           <ul className="sources">
@@ -96,12 +103,16 @@ function Message({ message, rowRef, onRetry }) {
           </ul>
         )}
         {message.tools && <ToolDetails tools={message.tools} />}
+        </div></div>
       </div>
     </div>
   );
 }
 
 export default function App() {
+  const { lang, setLang, t } = useLang();
+  const { theme, setTheme } = useTheme();
+  const look = PARTICLES[theme];
   const [messages, setMessages] = useState([]);
   const [models, setModels] = useState({ default: undefined, list: [] });
   const [busy, setBusy] = useState(false);
@@ -129,7 +140,7 @@ export default function App() {
     setBusy(true);
     setMessages((current) => [...current, { role: "user", text }]);
     try {
-      const data = await sendQuestion(text, conversationId.current, options);
+      const data = await sendQuestion(t, text, conversationId.current, options);
       conversationId.current = data.conversation_id;
       setMessages((current) => [...current, { role: "assistant", ...data }]);
     } catch (error) {
@@ -148,18 +159,29 @@ export default function App() {
 
   return (
     <>
-    <Particles particleColors={PARTICLE_COLORS} particleCount={200} particleSpread={10} speed={0.1} particleBaseSize={100}
-      glow={0.5} twinkle={0.3} moveParticlesOnHover hoverEffect="parallax" sizeRandomness={1} shape="circle"
-      particleHoverFactor={1} clickBurst intro opacity={1} />
+    <Particles particleColors={look.colors} particleCount={200} particleSpread={10} speed={0.1} particleBaseSize={100}
+      glow={look.glow} twinkle={0.3} moveParticlesOnHover hoverEffect="parallax" sizeRandomness={1} shape="circle"
+      particleHoverFactor={1} clickBurst intro opacity={look.opacity} />
     <div className="app">
-      <header><h1>COROS Chat</h1><span className="muted">Dữ liệu của bạn, xử lý hoàn toàn trên máy này</span></header>
-      <main role="log" aria-label="Cuộc trò chuyện" aria-busy={busy}>
+      <header>
+        <h1>COROS Chat</h1>
+        <span className="muted">{t.subtitle}</span>
+        <div className="controls">
+          <SquishSwitch checked={lang === "en"} onChange={(english) => setLang(english ? "en" : "vi")} label={t.englishInterface}
+            startContent="VI" endContent="EN" {...SWITCH} />
+          <SquishSwitch checked={theme === "light"} onChange={(light) => setTheme(light ? "light" : "dark")} label={t.lightMode}
+            startContent={<Moon />} endContent={<Sun />} {...SWITCH} />
+        </div>
+      </header>
+      <main role="log" aria-label={t.conversation} aria-busy={busy}>
         {messages.length === 0 && (
           <section className="welcome">
-            <h2>Hỏi về những buổi tập của bạn</h2>
-            <p>Số km, pace, tải tập luyện, biểu đồ theo tuần hoặc tháng, và gợi ý dựa trên chính dữ liệu COROS của bạn.</p>
+            <div className="welcome-intro">
+              <h2>{t.welcomeTitle}</h2>
+              <p>{t.welcomeBody}</p>
+            </div>
             <div className="prompts">
-              {EXAMPLES.map((example) => <button key={example} type="button" onClick={() => ask(example)}><span>{example}</span><ArrowRight /></button>)}
+              {t.examples.map((example) => <button key={example} type="button" onClick={() => ask(example)}><span>{example}</span><ArrowRight /></button>)}
             </div>
           </section>
         )}
@@ -167,12 +189,12 @@ export default function App() {
           <Message key={index} message={message} rowRef={index === messages.length - 1 ? lastRow : undefined}
             onRetry={message.retryQuestion && index === messages.length - 1 && !busy ? () => retry(index) : undefined} />
         ))}
-        {busy && <div className="row"><div className="bubble"><div className="working"><i /><i /><i /><i /><i /><span>Đang xử lý</span></div></div></div>}
+        {busy && <div className="row"><div className="bubble"><div className="working"><i /><i /><i /><i /><i /><span>{t.working}</span></div></div></div>}
         <div ref={bottom} />
       </main>
       <form onSubmit={(event) => event.preventDefault()}>
         <AIComposer models={models.list} defaultModelId={models.default} disabled={busy}
-          placeholder="Hỏi bằng tiếng Việt hoặc English…"
+          placeholder={t.placeholder} labels={t.composer}
           onSubmit={({ prompt, modelId, think }) => ask(prompt, { model: modelId, think })} />
       </form>
     </div>

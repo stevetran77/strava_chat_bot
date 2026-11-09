@@ -1,3 +1,4 @@
+import { useLang } from "./i18n";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 // Series colours are theme tokens (see styles.css), so the chart always matches the app.
@@ -36,10 +37,11 @@ function ChartTooltip({ active, payload, label, y_label }) {
 }
 
 function DataTable({ spec }) {
+  const { t } = useLang();
   return (
     <details className="details">
-      <summary>Bảng số liệu ({spec.rows.length} dòng)</summary>
-      <div className="table-scroll" tabIndex={0} role="region" aria-label={`Số liệu của biểu đồ ${spec.title}`}>
+      <summary>{t.dataTable(spec.rows.length)}</summary>
+      <div className="table-scroll" tabIndex={0} role="region" aria-label={t.dataTableLabel(spec.title)}>
         <table>
           <thead><tr>{[spec.x, ...spec.y].map((name) => <th key={name} scope="col">{name}</th>)}</tr></thead>
           <tbody>{spec.rows.map((row, index) => (
@@ -52,6 +54,7 @@ function DataTable({ spec }) {
 }
 
 export default function Chart({ spec }) {
+  const { t } = useLang();
   const animate = !reducedMotion();
   const multi = spec.y.length > 1;
   const Plot = spec.kind === "line" ? LineChart : BarChart;
@@ -60,7 +63,7 @@ export default function Chart({ spec }) {
   return (
     <figure className="chart">
       <figcaption>{spec.title}{spec.y_label && <span className="muted"> · {spec.y_label}</span>}</figcaption>
-      <div className="chart-plot" role="img" aria-label={`Biểu đồ ${spec.kind === "line" ? "đường" : "cột"}: ${spec.title}. Xem bảng số liệu bên dưới.`}>
+      <div className="chart-plot" role="img" aria-label={t.chartLabel(spec.kind, spec.title)}>
         <ResponsiveContainer width="100%" height={260}>
           <Plot data={spec.rows} margin={{ top: 8, right: 20, bottom: spec.x_label ? 18 : 4, left: 0 }}>
             <CartesianGrid vertical={false} stroke="var(--line)" />

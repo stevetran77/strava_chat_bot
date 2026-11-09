@@ -22,19 +22,78 @@
   --series-1: var(--accent);
   --series-2: #2cb394;
   --series-3: #dc8236;
-  --lane: rgb(14 12 20 / 0.9);
+  --lane: rgb(14 12 20 / 0.28);
+  --glass-fill: linear-gradient(150deg, rgb(255 255 255 / 0.10), rgb(255 255 255 / 0.04) 55%, rgb(255 255 255 / 0.07));
+  --glass-user: linear-gradient(150deg, rgb(184 169 255 / 0.30), rgb(130 110 240 / 0.16));
+  --glass-solid: #171420;
+  --glass-rim: rgb(255 255 255 / 0.5);
+  --glass-shine: rgb(255 255 255 / 0.16);
+  --glass-shadow: 0 10px 34px rgb(0 0 0 / 0.38), inset 0 1px 0 rgb(255 255 255 / 0.18), inset 0 -1px 0 rgb(0 0 0 / 0.22);
+  --glass-blur: blur(18px) saturate(1.7);
+  --ambient: radial-gradient(60vmax 50vmax at 10% 6%, rgb(120 90 255 / 0.24), transparent 62%), radial-gradient(55vmax 45vmax at 92% 88%, rgb(40 190 170 / 0.15), transparent 62%);
+  --hover-soft: rgb(255 255 255 / 0.06);
+  --hover: rgb(255 255 255 / 0.07);
+  --shadow: rgb(0 0 0 / 0.4);
+  --code-bg: rgb(0 0 0 / 0.35);
+  --accent-ring: rgb(184 169 255 / 0.18);
+  --error-line: rgb(255 180 168 / 0.35);
+  --scroll: #3a3446;
+  --switch-track: rgb(255 255 255 / 0.07);
   --column: 740px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --sans: "Geist Variable", system-ui, sans-serif;
   --mono: "Geist Mono Variable", ui-monospace, monospace;
   color-scheme: dark;
+  interpolate-size: allow-keywords;
 }
+
+/* Light theme: the same lavender hue on a pale page. Text and accent keep at least 4.5:1 on the panels. */
+:root[data-theme="light"] {
+  --page: #f6f4fb;
+  --panel: rgb(255 255 255 / 0.92);
+  --panel-solid: #ffffff;
+  --raised: rgb(238 234 248 / 0.9);
+  --line: rgb(30 20 70 / 0.1);
+  --line-strong: rgb(30 20 70 / 0.24);
+  --ink: #1b1630;
+  --ink-soft: #3d3659;
+  --ink-muted: #5f587c;
+  --accent: #5b45d6;
+  --accent-ink: #ffffff;
+  --user: #e7e1fb;
+  --error: #b3261e;
+  --series-2: #12806a;
+  --series-3: #b5641a;
+  --lane: rgb(246 244 251 / 0.3);
+  --glass-fill: linear-gradient(150deg, rgb(255 255 255 / 0.78), rgb(255 255 255 / 0.5) 55%, rgb(255 255 255 / 0.66));
+  --glass-user: linear-gradient(150deg, rgb(120 98 235 / 0.30), rgb(150 130 245 / 0.16));
+  --glass-solid: #ffffff;
+  --glass-rim: rgb(255 255 255 / 0.95);
+  --glass-shine: rgb(255 255 255 / 0.55);
+  --glass-shadow: 0 10px 30px rgb(60 40 140 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(60 40 140 / 0.08);
+  --ambient: radial-gradient(60vmax 50vmax at 10% 6%, rgb(150 125 255 / 0.34), transparent 62%), radial-gradient(55vmax 45vmax at 92% 88%, rgb(60 200 180 / 0.24), transparent 62%);
+  --hover-soft: rgb(30 20 70 / 0.06);
+  --hover: rgb(30 20 70 / 0.07);
+  --shadow: rgb(40 30 90 / 0.2);
+  --code-bg: rgb(30 20 70 / 0.05);
+  --accent-ring: rgb(91 69 214 / 0.2);
+  --error-line: rgb(179 38 30 / 0.4);
+  --scroll: #c9c2de;
+  --switch-track: rgb(30 20 70 / 0.08);
+  color-scheme: light;
+}
+/* Theme change: a long, eased dissolve between the two themes (the default 250 ms reads as a flash on a dark to light swap). */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 700ms; animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.theme-fading, .theme-fading *, .theme-fading *::before, .theme-fading *::after {
+  transition: background-color 600ms ease, color 600ms ease, border-color 600ms ease, box-shadow 600ms ease, fill 600ms ease, stroke 600ms ease !important; }
 * { box-sizing: border-box; }
 html { background: var(--page); }
-body { margin: 0; color: var(--ink); font: 15px/1.55 var(--sans); background: var(--page); -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--ambient); }
+body { margin: 0; color: var(--ink); font: 15px/1.55 var(--sans); background: transparent; -webkit-font-smoothing: antialiased; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
 input, button, textarea { caret-color: var(--accent); }
-* { scrollbar-width: thin; scrollbar-color: #3a3446 transparent; }
+* { scrollbar-width: thin; scrollbar-color: var(--scroll) transparent; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100lvh; z-index: 0; pointer-events: none; }
@@ -47,44 +106,98 @@ input, button, textarea { caret-color: var(--accent); }
 }
 .app { position: relative; z-index: 1; max-width: var(--column); min-height: 100vh; min-height: 100dvh; margin: 0 auto; padding: 0 20px; display: flex; flex-direction: column; }
 
-header { padding: 28px 0 12px; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+header { padding: 28px 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 h1 { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+.controls { display: inline-flex; align-items: center; gap: 12px; }
+.squish { position: relative; flex: none; border: 0; padding: 0; cursor: pointer; box-shadow: inset 0 0 0 1px var(--line-strong); display: inline-flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--pad); transition: background-color var(--color-duration) ease; -webkit-tap-highlight-color: transparent; }
+.squish::after { content: ""; position: absolute; inset: -6px; }
+.squish:disabled { cursor: default; opacity: 0.5; }
+/* The thumb travels on a spring; its inner shape squashes and stretches. Each layer animates transform only. */
+.squish-thumb { position: absolute; top: var(--pad); left: var(--pad); width: var(--base); height: var(--base);
+  transition: transform var(--duration) cubic-bezier(0.34, 1.32, 0.64, 1); will-change: transform; }
+.squish-shape { display: block; width: 100%; height: 100%; transform-origin: var(--origin);
+  transition: background-color var(--color-duration) ease, transform 180ms var(--ease); box-shadow: 0 2px 8px var(--shadow); }
+.squish:hover:not(:disabled) .squish-shape { transform: scale(var(--hover-scale)); }
+.squish:active:not(:disabled) .squish-shape { transform: scale(1.1, 0.94); }
+.squish-shape[data-run="true"] { animation: squish var(--duration) cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes squish {
+  0% { transform: scale(1, 1); }
+  30% { transform: scale(var(--peak), 0.88); }
+  65% { transform: scale(0.95, 1.05); }
+  100% { transform: scale(1, 1); }
+}
+/* Both options stay readable: the one under the thumb takes the thumb's ink, the other the muted ink. */
+.squish-slot { position: relative; z-index: 1; width: var(--base); height: var(--base); display: grid; place-items: center; pointer-events: none;
+  color: var(--idle); font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.03em; line-height: 1;
+  transition: color var(--color-duration) ease, transform var(--duration) cubic-bezier(0.34, 1.32, 0.64, 1); }
+.squish-slot[data-active="true"] { color: var(--active); transform: scale(1.08); }
+.squish-slot svg { width: 18px; height: 18px; }
 .muted { color: var(--ink-muted); font-size: 0.8125rem; }
 
 main { flex: 1; padding: 8px 0 20px; }
 
 /* Empty state: the prompts are plain rows, not cards. */
-.welcome { padding: 18vh 0 8px; }
+.welcome { margin-top: 12vh; display: flex; flex-direction: column; gap: 14px; }
+.welcome .welcome-intro { padding: 20px 24px; max-width: 100%; }
 .welcome h2 { margin: 0 0 6px; font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
-.welcome p { margin: 0 0 20px; color: var(--ink-soft); max-width: 46ch; }
-.prompts { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
-.prompts button {
-  background: transparent; border: 0; border-bottom: 1px solid var(--line); color: var(--ink-soft); font: inherit; text-align: left;
-  padding: 14px 4px; cursor: pointer; display: flex; justify-content: space-between; gap: 12px;
-  transition: color 160ms var(--ease), padding-left 160ms var(--ease);
+.welcome p { margin: 0; color: var(--ink-soft); max-width: 46ch; }
+/* Each suggestion is its own framed pane, so it reads as something to press. */
+.prompts { display: flex; flex-direction: column; gap: 10px; }
+.welcome .prompts button {
+  color: var(--ink-soft); font: inherit; text-align: left; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 13px 18px; border-radius: 18px; max-width: 100%;
+  transition: color 160ms var(--ease), transform 220ms var(--ease-out), box-shadow 220ms ease;
 }
-.prompts button:hover { color: var(--ink); padding-left: 10px; }
-.prompts svg { flex: none; opacity: 0; transform: translateX(-4px); transition: opacity 160ms var(--ease), transform 160ms var(--ease); color: var(--accent); }
+.welcome .prompts button:hover { color: var(--ink); transform: translateY(-2px); box-shadow: var(--glass-shadow), 0 0 0 1px var(--accent); }
+.welcome .prompts button:active { transform: translateY(0) scale(0.99); }
+.prompts svg { flex: none; opacity: 0.35; transform: translateX(-4px); transition: opacity 160ms var(--ease), transform 220ms var(--ease-out); color: var(--accent); }
 .prompts button:hover svg { opacity: 1; transform: none; }
 
-.row { display: flex; margin: 14px 0; scroll-margin-top: 20px; animation: arrive 240ms var(--ease) both; }
+.row { display: flex; margin: 14px 0; scroll-margin-top: 20px; }
 .row.user { justify-content: flex-end; }
-@keyframes arrive { from { opacity: 0; transform: translateY(6px); } }
-
-.bubble { min-width: 0; overflow-wrap: anywhere;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; max-width: min(100%, 660px);
+/* A message arrives from where it came from: the question rises out of the composer's corner, the answer opens in place
+   and unfolds to its full height, so the working bubble hands over to it without a jump. */
+.row.user .bubble { transform-origin: right bottom; animation: send 300ms var(--ease-out) backwards; }
+.row:not(.user) { animation: arrive 320ms var(--ease-out) backwards; }
+.bubble-fold { display: grid; grid-template-rows: 1fr; animation: unfold 480ms var(--ease-out) backwards; }
+.bubble-inner { min-height: 0; min-width: 0; }
+@keyframes send { from { opacity: 0; transform: translateY(12px) scale(0.96); } }
+@keyframes arrive { from { opacity: 0; transform: translateY(8px); } }
+/* overflow is clipped only while the box is still opening, so tooltips and focus rings are never cut afterwards */
+@keyframes unfold { from { grid-template-rows: 0fr; overflow: hidden; } to { grid-template-rows: 1fr; overflow: hidden; } }
+/* Liquid glass: a translucent, blurred pane with a bright rim that catches light from the top left, and a soft sheen that
+   follows the pointer. The fallback below keeps every box readable where blur or transparency is unavailable or unwanted. */
+.bubble, .welcome-intro, .prompts button, .app .aic-card { position: relative; min-width: 0; overflow-wrap: anywhere; background: var(--glass-fill), var(--glass-solid); background-blend-mode: normal;
+  border: 1px solid transparent; border-radius: 22px; padding: 12px 16px; max-width: min(100%, 660px);
+  box-shadow: var(--glass-shadow); isolation: isolate; }
+@supports (backdrop-filter: blur(1px)) {
+  .bubble, .welcome-intro, .prompts button, .app .aic-card { background: var(--glass-fill); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
 }
-.bubble.user { background: var(--user); border-color: var(--line-strong); border-bottom-right-radius: 4px; max-width: 80%; }
-.bubble.error { color: var(--error); border-color: rgb(255 180 168 / 0.35); }
+.bubble::before, .welcome-intro::before, .prompts button::before, .app .aic-card::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(140deg, var(--glass-rim), rgb(255 255 255 / 0.06) 32%, rgb(255 255 255 / 0.03) 62%, rgb(255 255 255 / 0.3));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.bubble::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 320ms ease;
+  background: radial-gradient(220px circle at var(--mx, 30%) var(--my, 0%), var(--glass-shine), transparent 65%); z-index: -1; }
+.bubble:hover::after { opacity: 1; }
+.bubble.user { background: var(--glass-user), var(--glass-solid); border-bottom-right-radius: 8px; max-width: 80%; }
+@supports (backdrop-filter: blur(1px)) { .bubble.user { background: var(--glass-user); } }
+.app .aic-card { border-radius: 26px; padding: 12px; }
+@media (prefers-reduced-transparency: reduce) {
+  .bubble, .welcome-intro, .prompts button, .app .aic-card { background: var(--glass-solid) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .bubble.user { background: var(--user) !important; }
+}
+.bubble.error { color: var(--error); box-shadow: var(--glass-shadow), 0 0 0 1px var(--error-line); }
 .text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; max-width: 68ch; }
 
-.chart { margin: 14px 0 0; padding: 0; }
+.chart { margin: 14px 0 0; padding: 0; animation: fade-in 360ms var(--ease-out) backwards; }
+@keyframes fade-in { from { opacity: 0; } }
 .chart figcaption { margin: 0 0 8px; font-weight: 500; color: var(--ink); font-size: 0.875rem; }
 .chart-plot { min-width: 0; }
 .chart-plot svg { overflow: visible; }
 .chart .details { margin: 6px 0 0; }
 .chart-loading { margin-top: 12px; height: 260px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; color: var(--ink-muted); font-size: 0.8125rem; }
-.chart-tip { background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; font-size: 0.8125rem; box-shadow: 0 6px 18px rgb(0 0 0 / 0.4); }
+.chart-tip { background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; font-size: 0.8125rem; box-shadow: 0 6px 18px var(--shadow); }
 .chart-tip-label { color: var(--ink-muted); margin-bottom: 4px; }
 .chart-tip-row { display: flex; align-items: center; gap: 8px; color: var(--ink-soft); }
 .chart-tip-row i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
@@ -106,11 +219,16 @@ main { flex: 1; padding: 8px 0 20px; }
 .details summary svg { transition: transform 160ms var(--ease); }
 .details[open] summary svg { transform: rotate(90deg); }
 .details summary:hover { color: var(--ink-soft); }
+@supports selector(::details-content) {
+  .details::details-content { block-size: 0; overflow: clip; opacity: 0;
+    transition: block-size 280ms var(--ease-out), opacity 200ms ease, content-visibility 280ms allow-discrete; }
+  .details[open]::details-content { block-size: auto; opacity: 1; }
+}
 .tool { margin-top: 8px; min-width: 0; }
 .retry { margin-top: 10px; background: transparent; border: 1px solid var(--line-strong); color: var(--ink); border-radius: 999px; padding: 8px 16px; font: inherit; cursor: pointer; min-height: 40px; }
 .retry:hover { border-color: var(--accent); color: var(--accent); }
 .tool strong { color: var(--ink-soft); font-weight: 500; }
-pre { background: rgb(0 0 0 / 0.35); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: 0.75rem/1.55 var(--mono); overflow: auto; margin: 6px 0 0; color: var(--ink-soft); }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: 0.75rem/1.55 var(--mono); overflow: auto; margin: 6px 0 0; color: var(--ink-soft); }
 
 /* Working: five dots pulse in sequence, a small echo of the grid behind. */
 .working { display: inline-flex; gap: 5px; align-items: center; height: 22px; color: var(--ink-soft); font-size: 0.8125rem; }
@@ -120,14 +238,22 @@ pre { background: rgb(0 0 0 / 0.35); border: 1px solid var(--line); border-radiu
 .working span { margin-left: 8px; }
 @keyframes pulse { 40% { opacity: 1; transform: scale(1.5); } }
 
-form { position: sticky; bottom: 0; padding: 14px 0 20px; background: linear-gradient(to top, var(--page) 55%, transparent); }
+form { position: sticky; bottom: 0; padding: 14px 0 20px; }
 @media (max-width: 560px) {
   .app { padding: 0 14px; }
-  .welcome { padding-top: 10vh; }
+  .welcome { margin-top: 6vh; }
+  .welcome-intro { padding: 18px; }
   .welcome h2 { font-size: 1.4rem; }
   .bubble.user { max-width: 92%; }
+  .bubble { border-radius: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .row, .working i { animation: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 160ms; }
+  .squish-thumb, .squish-slot, .squish-shape { transition-duration: 0ms; }
+  .squish-shape[data-run="true"] { animation: none; }
+  .row.user .bubble, .bubble-fold { animation: none; }
+  .row:not(.user) { animation-name: fade-in; animation-duration: 200ms; }
+  .details::details-content { transition-duration: 0ms; }
+  .working i { animation: none; }
   .working i { opacity: 0.7; }
 }

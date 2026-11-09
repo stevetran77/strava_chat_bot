@@ -39,7 +39,25 @@ export interface AIComposerProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+  /** Interface text; defaults are Vietnamese. */
+  labels?: ComposerLabels;
 }
+
+export interface ComposerLabels {
+  question: string;
+  send: string;
+  loadingModel: string;
+  mode: string;
+  effort: Record<EffortLevel, string>;
+}
+
+const DEFAULT_LABELS: ComposerLabels = {
+  question: 'Câu hỏi',
+  send: 'Gửi',
+  loadingModel: 'Đang tải model…',
+  mode: 'Chế độ',
+  effort: { Standard: 'Standard', Thinking: 'Thinking' },
+};
 
 const EFFORTS: EffortLevel[] = ['Standard', 'Thinking'];
 
@@ -66,6 +84,7 @@ export default function AIComposer({
   disabled = false,
   placeholder = 'Ask about your training…',
   className = '',
+  labels = DEFAULT_LABELS,
 }: AIComposerProps) {
   const [promptText, setPromptText] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -136,10 +155,10 @@ export default function AIComposer({
   return (
     <div className={`aic-root w-full ${className}`}>
       <style>{`
-        .aic-root { --aic-card: var(--panel); --aic-pill-hover: rgb(255 255 255 / 0.06); --aic-hover: rgb(255 255 255 / 0.07); }
+        .aic-root { --aic-card: var(--panel); --aic-pill-hover: var(--hover-soft); --aic-hover: var(--hover); }
         .aic-card { position: relative; border-radius: 24px; border: 1px solid var(--line-strong); background: var(--aic-card);
           padding: 16px 14px 12px 16px; transition: border-color .16s ease, box-shadow .16s ease; }
-        .aic-card:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(184 169 255 / 0.18); }
+        .aic-card:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
         .aic-input { width: 100%; background: transparent; border: 0; outline: none; resize: none; color: var(--ink); font: inherit;
           line-height: 1.5; min-height: 28px; max-height: 140px; field-sizing: content; padding: 0 2px; margin-bottom: 12px; }
         .aic-input::placeholder { color: var(--ink-muted); opacity: 1; }
@@ -148,7 +167,7 @@ export default function AIComposer({
           transition: background-color .2s ease, border-color .2s ease; }
         .aic-model-btn:hover, .aic-model-btn[aria-expanded="true"] { background: var(--aic-pill-hover); border-color: var(--line); }
         .aic-popover { position: absolute; left: 0; bottom: 46px; z-index: 30; border-radius: 18px; padding: 8px;
-          background: var(--panel-solid); border: 1px solid var(--line-strong); box-shadow: 0 22px 48px -10px rgb(0 0 0 / 0.65);
+          background: var(--panel-solid); border: 1px solid var(--line-strong); box-shadow: 0 22px 48px -10px var(--shadow);
           transform-origin: bottom left; transition: opacity .18s var(--ease), transform .2s var(--ease); }
         .aic-popover[data-open="false"] { opacity: 0; transform: translateY(6px) scale(.97); pointer-events: none; }
         .aic-popover[data-open="true"] { opacity: 1; transform: none; }
@@ -176,7 +195,7 @@ export default function AIComposer({
           }}
           className="aic-input"
           placeholder={placeholder}
-          aria-label="Câu hỏi"
+          aria-label={labels.question}
           autoFocus
         />
 
@@ -190,8 +209,8 @@ export default function AIComposer({
               aria-haspopup="menu"
               aria-expanded={menuOpen}
             >
-              <span className="whitespace-nowrap">{activeModel?.name ?? 'Đang tải model…'}</span>
-              {activeModel && <span style={{ color: 'var(--ink-muted)', fontWeight: 400 }}>{effortOf(activeModel.id)}</span>}
+              <span className="whitespace-nowrap">{activeModel?.name ?? labels.loadingModel}</span>
+              {activeModel && <span style={{ color: 'var(--ink-muted)', fontWeight: 400 }}>{labels.effort[effortOf(activeModel.id)]}</span>}
               <Chevron />
             </button>
 
@@ -217,7 +236,7 @@ export default function AIComposer({
                     onMouseLeave={scheduleHide}
                   >
                     <span className="truncate">
-                      {m.name} <span style={{ color: 'var(--ink-muted)' }}>{effortOf(m.id)}</span>
+                      {m.name} <span style={{ color: 'var(--ink-muted)' }}>{labels.effort[effortOf(m.id)]}</span>
                     </span>
                     {m.id === activeModelId && <Check />}
                   </button>
@@ -236,7 +255,7 @@ export default function AIComposer({
               onMouseLeave={scheduleHide}
             >
               <div className="px-3 py-1.5 text-[13px] font-medium" style={{ color: 'var(--ink-soft)' }}>
-                Chế độ
+                {labels.mode}
               </div>
               {hoveredModelId &&
                 EFFORTS.map((level) => (
@@ -248,14 +267,14 @@ export default function AIComposer({
                     className="aic-row"
                     onClick={(e) => selectEffort(e, hoveredModelId, level)}
                   >
-                    <span>{level}</span>
+                    <span>{labels.effort[level]}</span>
                     {effortOf(hoveredModelId) === level && <Check />}
                   </button>
                 ))}
             </div>
           </div>
 
-          <button type="button" onClick={submit} disabled={!canSubmit} data-ready={canSubmit} className="aic-send" aria-label="Gửi">
+          <button type="button" onClick={submit} disabled={!canSubmit} data-ready={canSubmit} className="aic-send" aria-label={labels.send}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M8 12.8V3.2M8 3.2L3.8 7.4M8 3.2L12.2 7.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
