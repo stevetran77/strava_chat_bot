@@ -14,6 +14,8 @@ Everything runs on your machine: the model (Ollama), the database (Docker), the 
 
 ## How it works
 
+![COROS Chat architecture](docs/architecture_sketch.png)
+
 ```
 React UI  ->  FastAPI  ->  chat loop  ->  Ollama (qwen3:14b, tool calling)
                                |
